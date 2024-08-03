@@ -1,0 +1,37 @@
+"""
+This module takes the pdfs in the output.pdf folder and imposes them into a single pdf per part for printing.
+"""
+
+import pycpdflib
+from library_tools import lib_single_query
+
+pycpdflib.loadDLL("libpycpdf.so")
+
+def merge_marchpacks(charts: list, custom_order: bool, source_dir: str):
+    """
+    For each instrument, assembles all parts into a single pdf,
+    with a specified order and page size.
+    """
+
+    total_charts = len(charts)
+    marchpack_pages = (total_charts // 2)
+    marchpack_diff = (total_charts % 2)
+
+    if custom_order is True:
+        chart_index = []
+        print("select charts for A side")
+        a_id = 1
+        b_id = 1
+        for chart in (marchpack_pages + marchpack_diff):
+            page = {f"A{a_id}", lib_single_query(charts, pageid=a_id)}
+            chart_index.append(page)
+            a_id += 1
+        print("select charts for B side")
+        for chart in (marchpack_pages):
+            page = {f"B{b_id}", lib_single_query(charts, pageid=b_id)}
+            chart_index.append(page)
+            b_id += 1
+
+    print("Chart Index")
+    for chart in chart_index:
+        print(chart)

@@ -160,3 +160,4 @@ def assemble_books(lib,
                lib_dir,
                splitsort
                )
+    return selected_charts, issue_dir

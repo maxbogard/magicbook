@@ -5,6 +5,7 @@ from simple_term_menu import TerminalMenu
 from library_tools import audit_library
 from library_tools import lib_query
 from book_tools import assemble_books
+from imposition_tools import merge_marchpack
 from prompt_toolkit import print_formatted_text as print
 from prompt_toolkit import HTML
 
@@ -85,12 +86,12 @@ def main():
         if options[menu_entry_index] == "Exit":
             quit()
         elif options[menu_entry_index] == "Assemble Books":
-            assemble_books(lib,
-                           library_path,
-                           output_dir,
-                           ensemble_instruments,
-                           ensemble_dir,
-                           splitsort)
+            selected_charts, issue_dir = assemble_books(lib,
+                                                        library_path,
+                                                        output_dir,
+                                                        ensemble_instruments,
+                                                        ensemble_dir,
+                                                        splitsort)
             going_home()
         elif options[menu_entry_index] == "Query Charts":
             lib_query(lib)

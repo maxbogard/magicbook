@@ -12,7 +12,8 @@ survey = "^5.4.0"
 jsonschema = "^4.23.0"
 simple-term-menu = "^1.6.4"
 prompt-toolkit = "^3.0.47"
-
+pip-licenses = "^5.0.0"
+pycpdflib = "^2.5"
 
 [build-system]
 requires = ["poetry-core"]

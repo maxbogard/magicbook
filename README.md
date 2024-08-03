@@ -29,6 +29,8 @@ root of the project, with the charts arranged in the following structure
 
 A sample music library with this structure is [available for download here](https://1drv.ms/f/s!AlNWUe2YKW0ehYUQOrpQwFzMWRFiQQ?e=VboBnD)
 
+For the imposition tools to work, you must install the [libcpdf binaries](https://github.com/coherentgraphics/cpdflib-binary).
+
 ## Features
 
 As of this writing, **magicbook** performs the following tasks:

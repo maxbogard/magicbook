@@ -65,6 +65,21 @@ def lib_query(lib):
             break
     return selected
 
+def lib_single_query(loc, pageid=""):
+    """
+    prompts the user to select a single chart from a list of charts
+    optional input to specify the page ID
+    """
+    choices = []
+    for cha in loc:
+        choices.append(cha.title)
+    selection = survey.routines.select(f'SELECT CHART: {pageid}', options=choices)
+    print("\n")
+    selected = loc[selection]
+    if pageid is True:
+        print(f"{pageid}: - {selected.title}")
+    return selected 
+
 
 def show_chart_details(chart, lib):
     """

@@ -2,6 +2,7 @@
 sample-music-library/
 music-library/
 output/
+dependencies/
 
 # macos
 .DS_Store
