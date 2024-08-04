@@ -19,6 +19,7 @@ class Chart:
                  t=None):
         self.slug = slug
         self.is_single = is_single
+        self.sl = sl
         songs = []
         for s in sl:
             entry = object.__new__(Song)

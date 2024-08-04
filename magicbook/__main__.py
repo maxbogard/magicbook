@@ -1,13 +1,16 @@
 import os
 import yaml
 from simple_term_menu import TerminalMenu
+import survey
+from prompt_toolkit import print_formatted_text as print
+from prompt_toolkit import HTML
 
+from constants import SPLITSORT
 from library_tools import audit_library
 from library_tools import lib_query
 from book_tools import assemble_books
-from imposition_tools import merge_marchpack
-from prompt_toolkit import print_formatted_text as print
-from prompt_toolkit import HTML
+from imposition_tools import merge_marchpacks
+
 
 # various unorganized config files
 
@@ -19,30 +22,17 @@ chart_schema = "chart-info.json"
 library_path = "./music-library/"
 active_ensemble = "generic_ensemble.yaml"
 
-splitsort = {
-    2: [
-        {"parts": [1], "name": "1"},
-        {"parts": [2], "name": "2"},
-    ],
-    3: [
-        {"parts": [1, 1], "name": "1"},
-        {"parts": [1, 2], "name": "2A"},
-        {"parts": [2, 2], "name": "2B"},
-        {"parts": [2, 3], "name": "3"}
-    ],
-    4: [
-        {"parts": [1, 1, 1], "name": "1"},
-        {"parts": [1, 1, 2], "name": "2A"},
-        {"parts": [1, 2, 2], "name": "2B"},
-        {"parts": [2, 2, 2], "name": "2C"},
-        {"parts": [2, 2, 3], "name": "3A"},
-        {"parts": [2, 3, 3], "name": "3B"},
-        {"parts": [2, 3, 4], "name": "4"}
-    ]
-}
 
 # and now the code begins...
-
+def list_assembled_books(dir):
+    """
+    List all the books in a directory
+    """
+    books = []
+    for file in os.listdir(dir):
+        if file.endswith(".pdf"):
+            books.append(file)
+    return books
 
 def going_home():
     print('\n...returning to main menu\n')
@@ -54,6 +44,7 @@ def main():
     """
     options = ["Query Charts",
                "Assemble Books",
+               "Impose Created Books",
                "Exit"]
 
     print(
@@ -91,7 +82,33 @@ def main():
                                                         output_dir,
                                                         ensemble_instruments,
                                                         ensemble_dir,
-                                                        splitsort)
+                                                        SPLITSORT)
+            if survey.routines.inquire("Impose PDFS?", default=True) is True:
+                merge_marchpacks(selected_charts, True, issue_dir, ensemble_info)
+            going_home()
+        elif options[menu_entry_index] == "Impose Created Books":
+            if output_dir == False:
+                existing_books = list_assembled_books(output_dir)
+                print("You didn't assemble any books during this session.")
+                if existing_books is False:
+                    print("There are no previously assembled books either.")
+                    print("Please assemble some books first.")
+                    going_home()
+                # else:
+                    # NEED A WAY TO RETREIVE CHART OBJECTS TO PRINT A PREVIOUS BOOK!!
+                    # print("Would you like to choose a previously assembled book?")
+                    # existing_books.append("Return to Main Menu")
+                    # imposition_menu = TerminalMenu(existing_books)
+                    # imposition_entry_index = imposition_menu.show()
+                    # if existing_books[imposition_entry_index] == "Return to Main Menu":
+                    #     going_home()
+                    # else:
+                    #     for book in existing_books:
+                    #         if existing_books[imposition_entry_index] == book:
+                    #             selected_book = book
+                    #             break
+
+            merge_marchpacks(selected_charts, True, issue_dir, ensemble_info)
             going_home()
         elif options[menu_entry_index] == "Query Charts":
             lib_query(lib)

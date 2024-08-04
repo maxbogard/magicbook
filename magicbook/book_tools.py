@@ -66,7 +66,7 @@ def grab_parts(instruments,
                charts,
                issue_dir,
                lib_dir,
-               splitsort):
+               SPLITSORT):
     for instrument in instruments:
         inspath = os.path.join(issue_dir, instrument['slug'])
         os.makedirs(inspath)
@@ -94,7 +94,7 @@ def grab_parts(instruments,
                         if chart.slug in file:
                             divct += 1
                     divdict[chart] = divct
-            for book in splitsort[instrument['div']]:
+            for book in SPLITSORT[instrument['div']]:
                 bpath = os.path.join(issue_dir,
                                      instrument["slug"],
                                      book["name"]
@@ -103,8 +103,8 @@ def grab_parts(instruments,
                     os.makedirs(bpath)
                 print(f"{instrument["name"]} {book["name"]}:")
                 for chart in divdict:
-                    n = divdict[chart]
-                    if n == 1:
+                    chart_part_divs = divdict[chart]
+                    if chart_part_divs == 1:
                         for file in os.listdir(inspath):
                             if chart.slug in file:
                                 dpath = os.path.join(bpath, file)
@@ -117,9 +117,10 @@ def grab_parts(instruments,
 
                                 source.close()
                                 dest.close()
-                    elif n > 1:
+                    elif chart_part_divs > 1:
                         bookparts = book["parts"]
-                        z = bookparts[(n - 2)]
+
+                        z = bookparts[(chart_part_divs - 2)]
                         for file in os.listdir(inspath):
                             if chart.slug in file:
                                 if f"{instrument['slug']}{z}" in file:
@@ -130,7 +131,6 @@ def grab_parts(instruments,
                                     dest = open(dpath, 'wb')
                                     shutil.copyfileobj(source, dest)
                                     print(f" * added {file}")
-
                                     source.close()
                                     dest.close()
             for item in os.listdir(inspath):
@@ -145,7 +145,7 @@ def assemble_books(lib,
                    output_dir,
                    instruments,
                    ensemble_dir,
-                   splitsort):
+                   SPLITSORT):
     """
     Create books to hand out to ensemble members
     with charts for their instrument
@@ -158,6 +158,6 @@ def assemble_books(lib,
                selected_charts,
                issue_dir,
                lib_dir,
-               splitsort
+               SPLITSORT
                )
     return selected_charts, issue_dir
