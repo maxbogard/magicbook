@@ -6,7 +6,7 @@ import os
 import pypdf
 import library_tools
 
-from constants import SPLITSORT
+from constants import SPLITSORT, LYRE_PAPER_X, LYRE_PAPER_Y, LYRE_CONTENT_X, LYRE_CONTENT_Y
 
 def count_pdf_pages(pdf_path: str) -> int:
     """
@@ -53,6 +53,31 @@ def get_book_path(instrument, source_dir):
         raise ValueError("""an instrument can't be divided into less than one part!
                             check your ensemble json file!""")
     return list_of_paths
+
+def scale_to_marchpack(pdf):
+    """
+    scales the pdf to the largest possible size that will still fit in a marchpack
+    along with leaving a margin on the right hand side for the page # and extra info.
+    """
+    pdf_reader = pypdf.PdfReader(pdf)
+    pdf_writer = pypdf.PdfWriter()
+    for n in range(0, pdf_reader.get_num_pages()):
+        page = pdf_reader.get_page(n)
+        h = float(page.mediabox.height)
+        w = float(page.mediabox.width)
+        scale_factor = MIN(LYRE_CONTENT_X / w, LYRE_CONTENT_Y / h)
+
+        transform = pypdf.Transformation().scale(scale_factor, scale_factor)
+        page.add_transformation(transform)
+        
+        page.cropbox = pypdf.generic.RectangleObject([0, 0, LYRE_PAPER_X, LYRE_PAPER_Y])
+
+        page_new = pypdf.PageObject.create_blank_page(width = LYRE_PAPER_X, h = LYRE_PAPER_Y)
+        page.mediabox = (0, 0, LYRE_PAPER_X, LYRE_PAPER_Y)
+        page_new.merge_page(page)
+
+        pypdf.PdfWriter('test-output.pdf')
+
         
 
 def impose_and_merge(parts: list, blanks: int, output_name: str):

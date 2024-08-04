@@ -5,12 +5,12 @@ import survey
 from prompt_toolkit import print_formatted_text as print
 from prompt_toolkit import HTML
 
-from constants import SPLITSORT
 from library_tools import audit_library
 from library_tools import lib_query
 from book_tools import assemble_books
 from imposition_tools import merge_marchpacks
 
+from constants import SPLITSORT
 
 # various unorganized config files
 

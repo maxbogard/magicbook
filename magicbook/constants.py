@@ -24,3 +24,11 @@ SPLITSORT = {
         {"parts": [2, 3, 4], "name": "4"}
     ]
 }
+
+## Paper Sizes
+
+LYRE_PAPER_X = 504
+LYRE_PAPER_Y = 345.6
+
+LYRE_CONTENT_X = 475.2
+LYRE_CONTENT_Y = 345.6
