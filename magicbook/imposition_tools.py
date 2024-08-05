@@ -141,7 +141,7 @@ def impose_and_merge(parts: list, blanks: int, output_name: str):
     new_bytes_object.close()
 
 
-def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble_info: dict):
+def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble_info: dict, max_id: int):
     """
     For each instrument, assembles all parts into a single pdf,
     with a specified order and page size.
@@ -162,7 +162,7 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
             a_index[a_id] = chart
             a_id += 1
         b_index = {}
-        b_id = 1
+        b_id = ((max_id - marchpack_pages) + 1)
         print("select charts for B side")
         for n in range(0, (marchpack_pages)):
             chart = library_tools.lib_single_query(charts_rem, pageid=f"B{b_id}")
@@ -178,7 +178,7 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
             charts_rem.pop(0)
             a_id += 1
         b_index = {}
-        b_id = 1
+        b_id = ((max_id - marchpack_pages) + 1)
         for n in range(0, (marchpack_pages)):
             b_index[b_id] = chart[0]
             charts_rem.pop(0)

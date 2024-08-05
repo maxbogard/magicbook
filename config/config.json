@@ -1,0 +1,10 @@
+{
+    "default ensemble": "generic_ensemble.json",
+    "paper sizes": {
+        "Marchpack": {
+            "width": 504,
+            "height": 345.6,
+            "right-offset:": 28.8
+        }
+    }
+}

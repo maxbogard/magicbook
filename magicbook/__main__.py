@@ -8,6 +8,7 @@ from prompt_toolkit import HTML
 from library_tools import audit_library
 from library_tools import lib_query
 from book_tools import assemble_books
+from book_tools import Instrument
 from imposition_tools import merge_marchpacks
 
 from constants import SPLITSORT
@@ -77,14 +78,15 @@ def main():
         if options[menu_entry_index] == "Exit":
             quit()
         elif options[menu_entry_index] == "Assemble Books":
-            selected_charts, issue_dir = assemble_books(lib,
+            print(f"Assembling marchpacks for the {ensemble_info['name']}.")
+            selected_charts, issue_dir, max_id = assemble_books(lib,
                                                         library_path,
                                                         output_dir,
                                                         ensemble_instruments,
                                                         ensemble_dir,
                                                         SPLITSORT)
             if survey.routines.inquire("Impose PDFS?", default=True) is True:
-                merge_marchpacks(selected_charts, True, issue_dir, ensemble_info)
+                merge_marchpacks(selected_charts, True, issue_dir, ensemble_info, max_id)
             going_home()
         elif options[menu_entry_index] == "Impose Created Books":
             if output_dir == False:
