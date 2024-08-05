@@ -238,7 +238,7 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                 for chart_id in b_index.keys():
                     for file in os.listdir(path):
                         if b_index[chart_id].slug in file:
-                            part_obj = Part(b_index[chart_id], f"A{chart_id}", os.path.join(path, file))
+                            part_obj = Part(b_index[chart_id], f"B{chart_id}", os.path.join(path, file))
                             b_parts.append(part_obj)
                             b_pages += part_obj.pagect
 
