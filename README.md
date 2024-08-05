@@ -27,7 +27,7 @@ root of the project, with the charts arranged in the following structure:
 └── (chart-slug)
 ```
 
-A sample music library with this structure is [available for download here](https://1drv.ms/f/s!AlNWUe2YKW0ehYUQOrpQwFzMWRFiQQ?e=VboBnD)
+A sample music library with this structure is [available for download here](https://1drv.ms/f/s!AlNWUe2YKW0ehYUQOrpQwFzMWRFiQQ)
 
 ### Terminology
 
