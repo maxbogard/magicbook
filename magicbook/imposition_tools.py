@@ -5,6 +5,8 @@ This module takes the pdfs in the output.pdf folder and imposes them into a sing
 import os
 import pypdf
 import library_tools
+from io import BytesIO
+from reportlab.pdfgen import canvas
 
 from constants import SPLITSORT, LYRE_PAPER_X, LYRE_PAPER_Y, LYRE_CONTENT_X, LYRE_CONTENT_Y
 
@@ -78,20 +80,65 @@ def get_book_path(instrument, source_dir):
 
 #         pypdf.PdfWriter('test-output.pdf')
 
-        
 
 def impose_and_merge(parts: list, blanks: int, output_name: str):
     """
-    merges the pdfs from a list of parts, and adds n blank pages to the end
-    """
+    merges the pdfs from a list of parts, and ads n blank pages to the end
+    then subsequently scales all pages to fit on marchpack-sized paper
+    """ 
+
+    new_bytes_object = BytesIO()
+
+    print("merging parts...")
+    list_of_stamps = []
+    counter = 0
     merger = pypdf.PdfWriter()
     for part in parts:
         merger.append(part.part_path)
+        for n in range(0, (merger.get_num_pages() - counter)):
+            list_of_stamps.append(part.page_id)
+        counter = merger.get_num_pages()
+    merger.write(new_bytes_object)
+    merger.close()
+
+    reader = pypdf.PdfReader(new_bytes_object)
+    writer = pypdf.PdfWriter()
+
+    for n in range(0, reader.get_num_pages()):
+        packet = BytesIO()
+        can = canvas.Canvas(packet, (LYRE_PAPER_X, LYRE_PAPER_Y))
+        can.setFont("Helvetica-Bold", 30)
+        can.drawRightString((LYRE_PAPER_X - 5), 5, list_of_stamps[n])
+        can.save()
+        
+        page = reader.get_page(n)
+        page.mediabox = page.cropbox
+        xt = (page.mediabox.left * -1)
+        yt = (page.mediabox.bottom * -1)
+        newx = page.mediabox.width
+        newy = page.mediabox.height
+        trans = pypdf.Transformation().translate(tx=xt, ty=yt)
+        page.add_transformation(trans)
+        page.cropbox = pypdf.generic.RectangleObject((0, 0, newx, newy))
+        page.mediabox = page.cropbox
+        h = float(page.mediabox.height)
+        w = float(page.mediabox.width)
+        scale_factor = min(LYRE_CONTENT_X / w, LYRE_CONTENT_Y / h)
+        transform = pypdf.Transformation().scale(scale_factor, scale_factor)
+        page.add_transformation(transform)
+        page.cropbox = pypdf.generic.RectangleObject([0, 0, LYRE_PAPER_X, LYRE_PAPER_Y])
+        new_pdf = pypdf.PdfReader(packet)
+        page_new = new_pdf.get_page(0)
+        page.mediabox = page_new.mediabox
+        page.merge_page(page_new)   
+        writer.add_page(page)
     if blanks > 0:
         for n in range(0, blanks):
-            merger.add_blank_page(width=504, height=345.6)
-    merger.write(output_name)
-    merger.close()
+            writer.add_blank_page(width=504, height=345.6)
+    writer.write(output_name)
+    writer.close()
+    reader.close()
+    new_bytes_object.close()
 
 
 def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble_info: dict):
@@ -138,11 +185,9 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
             b_id += 1
 
     for instrument in ensemble_info['instruments']:
-        book_paths = get_book_path(instrument, source_dir)
-        print(f"{instrument}, {book_paths}")
-        div = 1
-        for path in book_paths:
-            print(f'merging {instrument["name"]} {div} book')
+        if instrument['div'] == 1:
+            path = os.path.join(source_dir, instrument['slug'])
+            print(f'merging {instrument["name"]} book')
             a_parts = []
             a_pages = 0
             for chart_id in a_index.keys():
@@ -159,18 +204,53 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                         part_obj = Part(b_index[chart_id], f"A{chart_id}", os.path.join(path, file))
                         b_parts.append(part_obj)
                         b_pages += part_obj.pagect
-            
-            os.makedirs(f"{source_dir}/temp/{instrument['slug']}{div}")
+
+            os.makedirs(f"{source_dir}/temp/{instrument['slug']}")
 
             if a_pages > b_pages:
                 x_pages = a_pages - b_pages
                 ## merge pdfs with blank pages on b side
-                impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}{div}/A.pdf")
-                impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{div}/B.pdf")
+                impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}/A.pdf")
+                impose_and_merge(b_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/B.pdf")
             else:
                 x_pages = b_pages - a_pages
                 ## merge pdfs with blank pages on a side
-                impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{div}/A.pdf")
-                impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}{div}/B.pdf")
-            div += 1
+                impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/A.pdf")
+                impose_and_merge(b_parts, 0, f"{source_dir}/temp/{instrument['slug']}/B.pdf")
 
+        elif instrument['div'] < 1:
+            raise ValueError("""an instrument can't be divided into less than one part!
+                            check your ensemble json file!""")
+        else:
+            for book in SPLITSORT[instrument['div']]:
+                path = os.path.join(source_dir, instrument['slug'], book['name'])
+                print(f"merging{instrument['name']} {book['name']}:")
+                a_parts = []
+                a_pages = 0
+                for chart_id in a_index.keys():
+                    for file in os.listdir(path):
+                        if a_index[chart_id].slug in file:
+                            part_obj = Part(a_index[chart_id], f"A{chart_id}", os.path.join(path, file))
+                            a_parts.append(part_obj)
+                            a_pages += part_obj.pagect
+                b_parts = []
+                b_pages = 0
+                for chart_id in b_index.keys():
+                    for file in os.listdir(path):
+                        if b_index[chart_id].slug in file:
+                            part_obj = Part(b_index[chart_id], f"A{chart_id}", os.path.join(path, file))
+                            b_parts.append(part_obj)
+                            b_pages += part_obj.pagect
+
+                os.makedirs(f"{source_dir}/temp/{instrument['slug']}{book['name']}")  
+
+                if a_pages > b_pages:
+                    x_pages = a_pages - b_pages
+                    ## merge pdfs with blank pages on b side
+                    impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf")
+                    impose_and_merge(b_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf")
+                else:
+                    x_pages = b_pages - a_pages
+                    ## merge pdfs with blank pages on a side
+                    impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf")
+                    impose_and_merge(b_parts, 0, f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf")

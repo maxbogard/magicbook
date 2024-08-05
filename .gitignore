@@ -4,6 +4,9 @@ music-library/
 output/
 dependencies/
 
+# log files
+logs/
+
 # macos
 .DS_Store
 
