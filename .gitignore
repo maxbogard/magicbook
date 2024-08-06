@@ -3,6 +3,7 @@ sample-music-library/
 music-library/
 output/
 dependencies/
+config/templates/
 
 # log files
 logs/

@@ -150,7 +150,7 @@ def grab_parts(instruments,
             f.write("========================\n")
             for chart in divdict:
                 if divdict[chart] == 0:
-                    f.write(f"{chart.title}\n")
+                    f.write(f"{print(chart.title)}\n")
 
 
 def assemble_books(lib,

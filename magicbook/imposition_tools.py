@@ -7,6 +7,7 @@ import pypdf
 import library_tools
 from io import BytesIO
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 from constants import SPLITSORT, LYRE_PAPER_X, LYRE_PAPER_Y, LYRE_CONTENT_X, LYRE_CONTENT_Y
 
@@ -56,29 +57,7 @@ def get_book_path(instrument, source_dir):
                             check your ensemble json file!""")
     return list_of_paths
 
-# def scale_to_marchpack(pdf):
-#     """
-#     scales the pdf to the largest possible size that will still fit in a marchpack
-#     along with leaving a margin on the right hand side for the page # and extra info.
-#     """
-#     pdf_reader = pypdf.PdfReader(pdf)
-#     pdf_writer = pypdf.PdfWriter()
-#     for n in range(0, pdf_reader.get_num_pages()):
-#         page = pdf_reader.get_page(n)
-#         h = float(page.mediabox.height)
-#         w = float(page.mediabox.width)
-#         scale_factor = MIN(LYRE_CONTENT_X / w, LYRE_CONTENT_Y / h)
 
-#         transform = pypdf.Transformation().scale(scale_factor, scale_factor)
-#         page.add_transformation(transform)
-        
-#         page.cropbox = pypdf.generic.RectangleObject([0, 0, LYRE_PAPER_X, LYRE_PAPER_Y])
-
-#         page_new = pypdf.PageObject.create_blank_page(width = LYRE_PAPER_X, h = LYRE_PAPER_Y)
-#         page.mediabox = (0, 0, LYRE_PAPER_X, LYRE_PAPER_Y)
-#         page_new.merge_page(page)
-
-#         pypdf.PdfWriter('test-output.pdf')
 
 
 def impose_and_merge(parts: list, blanks: int, output_name: str):
@@ -139,6 +118,52 @@ def impose_and_merge(parts: list, blanks: int, output_name: str):
     writer.close()
     reader.close()
     new_bytes_object.close()
+    packet.close()
+
+
+def impose_for_printing(path_to_a: str, path_to_b: str, final_output_path: str):
+    """
+    Places the marchpacks onto US Letter paper for printing, with the 
+    A side on the top of each page and the B side on the bottom.
+    """
+    if os.path.exists(os.path.dirname(final_output_path)) is False:
+        os.makedirs(os.path.dirname(final_output_path))
+    reader_n = pypdf.PdfReader(path_to_a)
+    num_of_pages = reader_n.get_num_pages()
+
+    # packet = BytesIO()
+
+    # can = canvas.Canvas(packet, letter)
+    # for pg in range(0, reader_a.get_num_pages()):
+    #     can.showPage()
+    # can.save()
+
+    writer = pypdf.PdfWriter()
+
+    reader_a = pypdf.PdfReader(path_to_a)
+    reader_b = pypdf.PdfReader(path_to_b)
+
+
+    for pg in range(0, reader_n.get_num_pages()):
+        reader_template = pypdf.PdfReader("config/templates/trim-guides.pdf")
+        # base_pdf = pypdf.pdfReader(packet)
+        # page = base_pdf.get_page(pg)
+        page = reader_template.get_page(0)
+        a_page = reader_a.get_page(pg)
+        b_page = reader_b.get_page(pg)
+        page.merge_transformed_page(a_page, pypdf.Transformation().translate(tx=54, ty=396), False)
+        page.merge_transformed_page(b_page, pypdf.Transformation().rotate(180).translate(tx=558, ty=396), False)
+        writer.add_page(page)
+
+    
+    writer.write(final_output_path)
+    reader_a.close()
+    reader_b.close()
+    reader_template.close()
+    writer.close()
+    reader_n.close()
+    
+
 
 
 def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble_info: dict, max_id: int):
@@ -212,11 +237,20 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                 ## merge pdfs with blank pages on b side
                 impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}/A.pdf")
                 impose_and_merge(b_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/B.pdf")
+                impose_for_printing(f"{source_dir}/temp/{instrument['slug']}/A.pdf",
+                                    f"{source_dir}/temp/{instrument['slug']}/B.pdf", 
+                                    f"{source_dir}/output/{instrument['slug']}.pdf"
+                                    )
             else:
                 x_pages = b_pages - a_pages
                 ## merge pdfs with blank pages on a side
                 impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/A.pdf")
                 impose_and_merge(b_parts, 0, f"{source_dir}/temp/{instrument['slug']}/B.pdf")
+
+                impose_for_printing(f"{source_dir}/temp/{instrument['slug']}/A.pdf",
+                                    f"{source_dir}/temp/{instrument['slug']}/B.pdf", 
+                                    f"{source_dir}/output/{instrument['slug']}.pdf"
+                                    )
 
         elif instrument['div'] < 1:
             raise ValueError("""an instrument can't be divided into less than one part!
@@ -254,3 +288,8 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                     ## merge pdfs with blank pages on a side
                     impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf")
                     impose_and_merge(b_parts, 0, f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf")
+
+                impose_for_printing(f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf",
+                                    f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf", 
+                                    f"{source_dir}/output/{instrument['slug']}{book['name']}.pdf"
+                                    )
