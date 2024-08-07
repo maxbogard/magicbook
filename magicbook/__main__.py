@@ -1,5 +1,5 @@
 import os
-import yaml
+import json
 from simple_term_menu import TerminalMenu
 import survey
 from prompt_toolkit import print_formatted_text as print
@@ -15,13 +15,21 @@ from constants import SPLITSORT
 
 # various unorganized config files
 
-config_dir = "./config/"
-ensembles_dir = os.path.join(config_dir, "ensembles")
-schema_dir = "./schema/"
-output_dir = "./output/"
-chart_schema = "chart-info.json"
-library_path = "./music-library/"
-active_ensemble = "generic_ensemble.yaml"
+def load_config(config_dir)-> dict:
+    """
+    Load a JSON config file
+    """
+    with open(os.path.join(config_dir, 'config.json')) as config_file:
+        config = json.load(config_file)
+    return config
+
+def load_ensemble(ensemble):
+    """
+    Load a JSON ensemble file
+    """
+    with open(ensemble) as ensemble:
+        ensemble_info = json.load(ensemble)
+    return ensemble_info
 
 
 # and now the code begins...
@@ -43,6 +51,18 @@ def main():
     """
     Will run various functions from various modules
     """
+
+    CONFIG_DIR = './config/'
+    config = load_config(CONFIG_DIR)
+
+    ensembles_dir = os.path.join(CONFIG_DIR, config['directories']['ensembles'])
+    schema_dir = os.path.join(CONFIG_DIR, config['directories']['schema'])
+    
+    chart_schema = os.path.join(schema_dir, 'chart-info.json')
+    library_path = config['directories']['library']
+    output_dir = config['directories']['output']
+    active_ensemble = os.path.join(CONFIG_DIR, config['default-ensemble'])
+
     options = ["Query Charts",
                "Assemble Books",
                "Impose Created Books",
@@ -52,8 +72,7 @@ def main():
         f"opening library {library_path}, auditing charts"
     )
 
-    v, x, t, lib = audit_library(library_path,
-                                 os.path.join(schema_dir, chart_schema))
+    v, x, t, lib = audit_library(library_path, chart_schema)
     if v is False:
         print(f'{x} / {t} charts info.json failed validation.')
         print('Please fix these and try again')
@@ -61,8 +80,7 @@ def main():
     else:
         print(f'The library passed the audit with all {t} charts valid!\n')
 
-    with open(os.path.join(ensembles_dir, active_ensemble)) as ensemble:
-        ensemble_info = yaml.safe_load(ensemble)
+    ensemble_info = load_ensemble(active_ensemble)
 
     ensemble_instruments = ensemble_info['instruments']
     ensemble_dir = ensemble_info['slug']

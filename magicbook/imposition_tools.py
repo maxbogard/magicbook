@@ -5,6 +5,8 @@ This module takes the pdfs in the output.pdf folder and imposes them into a sing
 import os
 import pypdf
 import library_tools
+from library_tools import Chart, strip_part_filename
+from toc_tools import compile_toc_data, create_toc
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -19,9 +21,10 @@ def count_pdf_pages(pdf_path: str) -> int:
         pdf_reader = pypdf.PdfReader(pdf)
         return pdf_reader.get_num_pages()
 
-class Part(library_tools.Chart):
-    def __init__(self, chart: library_tools.Chart, page_id, part_path):
+class Part(Chart):
+    def __init__(self, chart: Chart, part_title, page_id, part_path):
         super().__init__(chart.slug, chart.is_single, chart.sl, chart.title)
+        self.part_title = part_title
         self.page_id = page_id
         self.part_path = part_path
         self.pagect = count_pdf_pages(part_path)
@@ -60,7 +63,7 @@ def get_book_path(instrument, source_dir):
 
 
 
-def impose_and_merge(parts: list, blanks: int, output_name: str):
+def impose_and_merge(parts: list, blanks: int, output_name: str, toc=None):
     """
     merges the pdfs from a list of parts, and ads n blank pages to the end
     then subsequently scales all pages to fit on marchpack-sized paper
@@ -82,6 +85,12 @@ def impose_and_merge(parts: list, blanks: int, output_name: str):
 
     reader = pypdf.PdfReader(new_bytes_object)
     writer = pypdf.PdfWriter()
+
+    if toc is not None:
+        toc_reader = pypdf.PdfReader(toc)
+        toc_page = toc_reader.get_page(0)
+        writer.add_page(toc_page)
+        toc_reader.close()
 
     for n in range(0, reader.get_num_pages()):
         packet = BytesIO()
@@ -111,6 +120,7 @@ def impose_and_merge(parts: list, blanks: int, output_name: str):
         page.mediabox = page_new.mediabox
         page.merge_page(page_new)   
         writer.add_page(page)
+        packet.close()
     if blanks > 0:
         for n in range(0, blanks):
             writer.add_blank_page(width=504, height=345.6)
@@ -118,7 +128,7 @@ def impose_and_merge(parts: list, blanks: int, output_name: str):
     writer.close()
     reader.close()
     new_bytes_object.close()
-    packet.close()
+    
 
 
 def impose_for_printing(path_to_a: str, path_to_b: str, final_output_path: str):
@@ -154,12 +164,13 @@ def impose_for_printing(path_to_a: str, path_to_b: str, final_output_path: str):
         page.merge_transformed_page(a_page, pypdf.Transformation().translate(tx=54, ty=396), False)
         page.merge_transformed_page(b_page, pypdf.Transformation().rotate(180).translate(tx=558, ty=396), False)
         writer.add_page(page)
+        reader_template.close()
 
     
     writer.write(final_output_path)
     reader_a.close()
     reader_b.close()
-    reader_template.close()
+
     writer.close()
     reader_n.close()
     
@@ -172,12 +183,14 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
     with a specified order and page size.
     """
 
+    add_toc = True # !!! - you should add an setting to include TOC or not  
+
     total_charts = len(charts)
     marchpack_pages = (total_charts // 2)
     marchpack_diff = (total_charts % 2)
 
     if custom_order is True:
-        charts_rem = charts
+        charts_rem = charts.copy()
         print("select charts for A side")
         a_index = {}
         a_id = 1
@@ -195,7 +208,7 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
             b_index[b_id] = chart
             b_id += 1
     else:
-        charts_rem = charts
+        charts_rem = charts.copy()
         a_index = {}
         a_id = 1
         for n in range(0, (marchpack_pages + marchpack_diff)):
@@ -218,7 +231,8 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
             for chart_id in a_index.keys():
                 for file in os.listdir(path):
                     if a_index[chart_id].slug in file:
-                        part_obj = Part(a_index[chart_id], f"A{chart_id}", os.path.join(path, file))
+                        part_slug = strip_part_filename(file, a_index[chart_id].slug)
+                        part_obj = Part(a_index[chart_id], part_slug, f"A{chart_id}", os.path.join(path, file))
                         a_parts.append(part_obj)
                         a_pages += part_obj.pagect
             b_parts = []
@@ -226,16 +240,22 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
             for chart_id in b_index.keys():
                 for file in os.listdir(path):
                     if b_index[chart_id].slug in file:
-                        part_obj = Part(b_index[chart_id], f"B{chart_id}", os.path.join(path, file))
+                        part_slug = strip_part_filename(file, b_index[chart_id].slug)
+                        part_obj = Part(b_index[chart_id], part_slug, f"B{chart_id}", os.path.join(path, file))
                         b_parts.append(part_obj)
                         b_pages += part_obj.pagect
 
             os.makedirs(f"{source_dir}/temp/{instrument['slug']}")
 
+            if add_toc is True:
+                a_pages += 1
+                toc_data = compile_toc_data(charts, a_parts, b_parts)
+                toc_path = create_toc(instrument['name'], toc_data)
+
             if a_pages > b_pages:
                 x_pages = a_pages - b_pages
                 ## merge pdfs with blank pages on b side
-                impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}/A.pdf")
+                impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}/A.pdf", toc=toc_path)
                 impose_and_merge(b_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/B.pdf")
                 impose_for_printing(f"{source_dir}/temp/{instrument['slug']}/A.pdf",
                                     f"{source_dir}/temp/{instrument['slug']}/B.pdf", 
@@ -244,13 +264,15 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
             else:
                 x_pages = b_pages - a_pages
                 ## merge pdfs with blank pages on a side
-                impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/A.pdf")
+                impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/A.pdf", toc=toc_path)
                 impose_and_merge(b_parts, 0, f"{source_dir}/temp/{instrument['slug']}/B.pdf")
 
-                impose_for_printing(f"{source_dir}/temp/{instrument['slug']}/A.pdf",
-                                    f"{source_dir}/temp/{instrument['slug']}/B.pdf", 
-                                    f"{source_dir}/output/{instrument['slug']}.pdf"
-                                    )
+
+
+            impose_for_printing(f"{source_dir}/temp/{instrument['slug']}/A.pdf",
+                                f"{source_dir}/temp/{instrument['slug']}/B.pdf", 
+                                f"{source_dir}/output/{instrument['slug']}.pdf"
+                                )
 
         elif instrument['div'] < 1:
             raise ValueError("""an instrument can't be divided into less than one part!
@@ -264,7 +286,8 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                 for chart_id in a_index.keys():
                     for file in os.listdir(path):
                         if a_index[chart_id].slug in file:
-                            part_obj = Part(a_index[chart_id], f"A{chart_id}", os.path.join(path, file))
+                            part_slug = strip_part_filename(file, a_index[chart_id].slug)
+                            part_obj = Part(a_index[chart_id], part_slug, f"A{chart_id}", os.path.join(path, file))
                             a_parts.append(part_obj)
                             a_pages += part_obj.pagect
                 b_parts = []
@@ -272,23 +295,29 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                 for chart_id in b_index.keys():
                     for file in os.listdir(path):
                         if b_index[chart_id].slug in file:
-                            part_obj = Part(b_index[chart_id], f"B{chart_id}", os.path.join(path, file))
+                            part_slug = strip_part_filename(file, b_index[chart_id].slug)
+                            part_obj = Part(b_index[chart_id], part_slug, f"B{chart_id}", os.path.join(path, file))
                             b_parts.append(part_obj)
                             b_pages += part_obj.pagect
 
-                os.makedirs(f"{source_dir}/temp/{instrument['slug']}{book['name']}")  
+                os.makedirs(f"{source_dir}/temp/{instrument['slug']}{book['name']}")
+
+                if add_toc is True:
+                    a_pages += 1
+                    toc_data = compile_toc_data(charts, a_parts, b_parts)
+                    toc_path = create_toc(f"{instrument['name']} {book['name']}", toc_data)
 
                 if a_pages > b_pages:
                     x_pages = a_pages - b_pages
                     ## merge pdfs with blank pages on b side
-                    impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf")
+                    impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf", toc=toc_path)
                     impose_and_merge(b_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf")
                 else:
                     x_pages = b_pages - a_pages
                     ## merge pdfs with blank pages on a side
-                    impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf")
+                    impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf", toc=toc_path)
                     impose_and_merge(b_parts, 0, f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf")
-
+                
                 impose_for_printing(f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf",
                                     f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf", 
                                     f"{source_dir}/output/{instrument['slug']}{book['name']}.pdf"

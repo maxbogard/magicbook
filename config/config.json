@@ -1,10 +1,18 @@
 {
-    "default ensemble": "generic_ensemble.json",
-    "paper sizes": {
-        "Marchpack": {
-            "width": 504,
-            "height": 345.6,
-            "right-offset:": 28.8
-        }
+  "directories": {
+    "ensembles": "ensembles",
+    "templates": "templates",
+    "schema": "schema",
+    "library": "./music-library/",
+    "output": "./output/",
+    "logs": "./logs/"
+  },
+  "default-ensemble": "generic_ensemble.json",
+  "paper-sizes": {
+    "Marchpack": {
+      "width": 504,
+      "height": 345.6,
+      "right-offset:": 28.8
     }
+  }
 }

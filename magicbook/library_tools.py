@@ -3,6 +3,8 @@ import json
 import jsonschema
 import survey
 
+from constants import PAGE_FORMATS
+
 
 class Song:
     def __init__(self, title: str, artist: str = None, arranger: str = None):
@@ -40,6 +42,15 @@ class Chart:
     
     def path(self, libdir):
         return os.path.join(libdir, self.slug)
+    
+def strip_part_filename(file, chart_name):
+    """
+    returns only the name of the part (no chart name or .pdf)
+    """
+    part_core = file.removeprefix(chart_name)
+    for format in PAGE_FORMATS:
+        return_value = part_core.removeprefix(f" {format} ").removesuffix(".pdf")
+    return return_value
 
 
 def lib_query(lib):
