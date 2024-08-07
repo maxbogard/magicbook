@@ -4,6 +4,8 @@ Functions that produce a table of contents given a list of charts, and page form
 
 from reportlab.platypus import BaseDocTemplate, Frame, Table, PageTemplate, TableStyle, Paragraph
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from library_tools import Chart, Song
 from constants import LYRE_PAPER_X, LYRE_PAPER_Y
 
@@ -37,30 +39,48 @@ def create_toc(book_name: str, toc_data):
     toc_path = f"./output/test/toc - {book_name}.pdf"
     doc = BaseDocTemplate(toc_path,
                             pagesize = (LYRE_PAPER_X, LYRE_PAPER_Y),
-                            rightMargin = 16,
-                            leftMargin = 16,
-                            topMargin = 16,
-                            bottomMargin = 16,
-                            title=f"Table of Contents - {book_name}"
+                            rightMargin = 10,
+                            leftMargin = 10,
+                            topMargin = 10,
+                            bottomMargin = 10,
+                            title=f"Table of Contents - {book_name}",
                             )
+    
+    style_cell = getSampleStyleSheet()['BodyText']
+    style_cell.alignment = TA_LEFT
+
+    style_right = ParagraphStyle(
+        name = 'Right Cell',
+        parent = style_cell
+    )
+    
+    style_right.alignment = TA_RIGHT
+
+    style_song = ParagraphStyle(
+        name = "Song Entry",
+        parent = style_cell,
+        leftIndent = 10,
+        bulletFontSize = 10,
+        bulletIndent = 0
+        )
 
     toc_with_songs = [['CHART', 'PART', '##']]
     row_counter = 0
-    style = [('LINEBELOW', (0, 0), (-1, 0), 1, colors.black)]
+    style = [('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+             ('FONTSIZE', (0, 1), (-1, -1), 10),]
+
     print(toc_data)
     for entry in toc_data:
         row_counter += 1
-        toc_with_songs.append([entry[0], entry[1], entry[2]])
+        toc_with_songs.append([Paragraph(entry[0], style_cell), Paragraph(entry[1], style_cell), entry[2]])
         if entry[3] != []:
-            row_counter += 1
-            song_contents = "     "
-            style.append(('SPAN', (0, row_counter), (-1, row_counter)))
             for song in entry[3]:
-                print(song)
-                song_contents.join(f"{song}, ")
-            toc_with_songs.append([song_contents])
+                row_counter += 1
+                style.append(('SPAN', (0, row_counter), (-1, row_counter)))
+                toc_with_songs.append([Paragraph(f'<bullet>&bull;</bullet><i>    {song}</i>', style_song), '', ''])
 
-    toc = Table(toc_with_songs, style=style, repeatRows=1)
+    toc = Table(toc_with_songs, colWidths=[141, 72, 24], style=style, repeatRows=1)
 
     frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-5, doc.height, id='column1')
     frame2 = Frame(doc.leftMargin + doc.width/2+5, doc.bottomMargin, doc.width/2-5, doc.height, id='column2')
