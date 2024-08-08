@@ -250,7 +250,7 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
             if add_toc is True:
                 a_pages += 1
                 toc_data = compile_toc_data(charts, a_parts, b_parts)
-                toc_path = create_toc(instrument['name'], toc_data)
+                toc_path = create_toc(ensemble_info['name'], instrument['name'], toc_data)
 
             if a_pages > b_pages:
                 x_pages = a_pages - b_pages
@@ -305,7 +305,7 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                 if add_toc is True:
                     a_pages += 1
                     toc_data = compile_toc_data(charts, a_parts, b_parts)
-                    toc_path = create_toc(f"{instrument['name']} {book['name']}", toc_data)
+                    toc_path = create_toc(ensemble_info['name'], f"{instrument['name']} {book['name']}", toc_data)
 
                 if a_pages > b_pages:
                     x_pages = a_pages - b_pages

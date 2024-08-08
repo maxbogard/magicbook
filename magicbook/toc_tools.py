@@ -2,11 +2,12 @@
 Functions that produce a table of contents given a list of charts, and page format.
 '''
 
-from reportlab.platypus import BaseDocTemplate, Frame, Table, PageTemplate, TableStyle, Paragraph
+from reportlab.platypus import BaseDocTemplate, Frame, Table, PageTemplate, TableStyle, Paragraph, FrameBreak
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from library_tools import Chart, Song
+from functools import partial
 from constants import LYRE_PAPER_X, LYRE_PAPER_Y
 
 def compile_toc_data(charts: list[Chart], a_parts: dict, b_parts: dict) -> list[list]:
@@ -32,7 +33,7 @@ def compile_toc_data(charts: list[Chart], a_parts: dict, b_parts: dict) -> list[
     
     return toc_data
 
-def create_toc(book_name: str, toc_data):
+def create_toc(ensemble_name: str, book_name: str, toc_data):
     '''
     Given the table of contents data, generates a table of contents
     '''
@@ -46,6 +47,8 @@ def create_toc(book_name: str, toc_data):
                             title=f"Table of Contents - {book_name}",
                             )
     
+    style_title = getSampleStyleSheet()['Title']
+
     style_cell = getSampleStyleSheet()['BodyText']
     style_cell.alignment = TA_LEFT
 
@@ -67,27 +70,44 @@ def create_toc(book_name: str, toc_data):
     toc_with_songs = [['CHART', 'PART', '##']]
     row_counter = 0
     style = [('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+             ('LEFTPADDING', (0, 0), (-1, -1), 0),
+             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+             ('TOPPADDING', (0, 0), (-1, -1), 2),
+             ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+             ('VALIGN', (0,0), (-1, -1), 'MIDDLE'),
              ('FONTSIZE', (0, 1), (-1, -1), 10),]
 
-    print(toc_data)
+    # height_rows = [16]
+
     for entry in toc_data:
         row_counter += 1
+        # height_rows.append(16)
         toc_with_songs.append([Paragraph(entry[0], style_cell), Paragraph(entry[1], style_cell), entry[2]])
         if entry[3] != []:
             for song in entry[3]:
                 row_counter += 1
+                # height_rows.append(12)
                 style.append(('SPAN', (0, row_counter), (-1, row_counter)))
+                style.append(('FONTSIZE', (0, row_counter), (-1, row_counter), 8))
                 toc_with_songs.append([Paragraph(f'<bullet>&bull;</bullet><i>    {song}</i>', style_song), '', ''])
 
     toc = Table(toc_with_songs, colWidths=[141, 72, 24], style=style, repeatRows=1)
 
-    frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-5, doc.height, id='column1')
-    frame2 = Frame(doc.leftMargin + doc.width/2+5, doc.bottomMargin, doc.width/2-5, doc.height, id='column2')
+    frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-5, doc.height-16, id='column1')
+    frame2 = Frame(doc.leftMargin + doc.width/2+5, doc.bottomMargin, doc.width/2-5, doc.height-16, id='column2')
     
+    def header(canvas, doc, content):
+        canvas.saveState()
+        w, h = content.wrap(doc.width, doc.topMargin)
+        content.drawOn(canvas, doc.leftMargin, doc.height + doc.topMargin - h)
+        canvas.restoreState()
+
+    toc_title = Paragraph(f"<b><i>{ensemble_name}: {book_name} book</i></b>", style_title)
+
     elements = [toc]
 
-    doc.addPageTemplates([PageTemplate(id='TOC', frames=[frame1, frame2])])
+    doc.addPageTemplates([PageTemplate(id='TOC', frames=[frame1, frame2], onPage = partial(header, content=toc_title))])
 
     doc.build(elements) 
 
