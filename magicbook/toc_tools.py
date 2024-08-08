@@ -33,16 +33,16 @@ def compile_toc_data(charts: list[Chart], a_parts: dict, b_parts: dict) -> list[
     
     return toc_data
 
-def create_toc(ensemble_name: str, book_name: str, toc_data):
+def create_toc(ensemble_name: str, book_name: str, output_loc, toc_data):
     '''
     Given the table of contents data, generates a table of contents
     '''
-    toc_path = f"./output/test/toc - {book_name}.pdf"
+    toc_path = f"{output_loc}/toc.pdf"
     doc = BaseDocTemplate(toc_path,
                             pagesize = (LYRE_PAPER_X, LYRE_PAPER_Y),
                             rightMargin = 10,
                             leftMargin = 10,
-                            topMargin = 10,
+                            topMargin = 6,
                             bottomMargin = 10,
                             title=f"Table of Contents - {book_name}",
                             )
@@ -51,6 +51,13 @@ def create_toc(ensemble_name: str, book_name: str, toc_data):
 
     style_cell = getSampleStyleSheet()['BodyText']
     style_cell.alignment = TA_LEFT
+
+    style_part = ParagraphStyle(
+        name = 'Part Cell',
+        parent = style_cell,
+        fontSize = 9
+        
+    )
 
     style_right = ParagraphStyle(
         name = 'Right Cell',
@@ -62,40 +69,42 @@ def create_toc(ensemble_name: str, book_name: str, toc_data):
     style_song = ParagraphStyle(
         name = "Song Entry",
         parent = style_cell,
+        fontSize = 8,
+        leading = 9.6,
         leftIndent = 10,
-        bulletFontSize = 10,
+        bulletFontSize = 8,
         bulletIndent = 0
         )
 
     toc_with_songs = [['CHART', 'PART', '##']]
     row_counter = 0
-    style = [('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-             ('LEFTPADDING', (0, 0), (-1, -1), 0),
-             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-             ('TOPPADDING', (0, 0), (-1, -1), 2),
-             ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
-             ('VALIGN', (0,0), (-1, -1), 'MIDDLE'),
-             ('FONTSIZE', (0, 1), (-1, -1), 10),]
+    style = [('FONTNAME',       (0, 0), (-1, 0), 'Helvetica-Bold'),
+             ('LEFTPADDING',    (0, 0), (-1, -1), 0),
+             ('RIGHTPADDING',   (0, 0), (-1, -1), 0),
+             ('TOPPADDING',     (0, 0), (-1, -1), 2),
+             ('BOTTOMPADDING',  (0, 0), (-1, -1), 0),
+             ('LINEBELOW',      (0, 0), (-1, 0), 1, colors.black),
+             ('VALIGN',         (0, 0), (-1, -1), 'MIDDLE'),
+             ('FONTSIZE',       (0, 1), (-1, -1), 10),]
 
     # height_rows = [16]
 
     for entry in toc_data:
         row_counter += 1
         # height_rows.append(16)
-        toc_with_songs.append([Paragraph(entry[0], style_cell), Paragraph(entry[1], style_cell), entry[2]])
+        toc_with_songs.append([Paragraph(entry[0], style_cell), Paragraph(entry[1], style_part), entry[2]])
         if entry[3] != []:
             for song in entry[3]:
                 row_counter += 1
                 # height_rows.append(12)
                 style.append(('SPAN', (0, row_counter), (-1, row_counter)))
-                style.append(('FONTSIZE', (0, row_counter), (-1, row_counter), 8))
+                style.append(('TOPPADDING', (0, row_counter), (-1, row_counter), 1))
                 toc_with_songs.append([Paragraph(f'<bullet>&bull;</bullet><i>    {song}</i>', style_song), '', ''])
 
-    toc = Table(toc_with_songs, colWidths=[141, 72, 24], style=style, repeatRows=1)
+    toc = Table(toc_with_songs, colWidths=[145, 72, 20], style=style, repeatRows=1)
 
-    frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-5, doc.height-16, id='column1')
-    frame2 = Frame(doc.leftMargin + doc.width/2+5, doc.bottomMargin, doc.width/2-5, doc.height-16, id='column2')
+    frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-5, doc.height-24, id='column1')
+    frame2 = Frame(doc.leftMargin + doc.width/2+5, doc.bottomMargin, doc.width/2-5, doc.height-24, id='column2')
     
     def header(canvas, doc, content):
         canvas.saveState()

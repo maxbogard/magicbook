@@ -245,32 +245,37 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                         b_parts.append(part_obj)
                         b_pages += part_obj.pagect
 
-            os.makedirs(f"{source_dir}/temp/{instrument['slug']}")
+            assemble_path = f"{source_dir}/temp/{instrument['slug']}"
+
+            os.makedirs(assemble_path)
 
             if add_toc is True:
                 a_pages += 1
                 toc_data = compile_toc_data(charts, a_parts, b_parts)
-                toc_path = create_toc(ensemble_info['name'], instrument['name'], toc_data)
+                toc_path = create_toc(ensemble_info['name'],
+                                      instrument['name'],
+                                      assemble_path,
+                                      toc_data)
 
             if a_pages > b_pages:
                 x_pages = a_pages - b_pages
                 ## merge pdfs with blank pages on b side
-                impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}/A.pdf", toc=toc_path)
-                impose_and_merge(b_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/B.pdf")
-                impose_for_printing(f"{source_dir}/temp/{instrument['slug']}/A.pdf",
-                                    f"{source_dir}/temp/{instrument['slug']}/B.pdf", 
+                impose_and_merge(a_parts, 0, f"{assemble_path}/A.pdf", toc=toc_path)
+                impose_and_merge(b_parts, x_pages, f"{assemble_path}/B.pdf")
+                impose_for_printing(f"{assemble_path}/A.pdf",
+                                    f"{assemble_path}/B.pdf", 
                                     f"{source_dir}/output/{instrument['slug']}.pdf"
                                     )
             else:
                 x_pages = b_pages - a_pages
                 ## merge pdfs with blank pages on a side
-                impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}/A.pdf", toc=toc_path)
-                impose_and_merge(b_parts, 0, f"{source_dir}/temp/{instrument['slug']}/B.pdf")
+                impose_and_merge(a_parts, x_pages, f"{assemble_path}/A.pdf", toc=toc_path)
+                impose_and_merge(b_parts, 0, f"{assemble_path}/B.pdf")
 
 
 
-            impose_for_printing(f"{source_dir}/temp/{instrument['slug']}/A.pdf",
-                                f"{source_dir}/temp/{instrument['slug']}/B.pdf", 
+            impose_for_printing(f"{assemble_path}/A.pdf",
+                                f"{assemble_path}/B.pdf", 
                                 f"{source_dir}/output/{instrument['slug']}.pdf"
                                 )
 
@@ -300,25 +305,30 @@ def merge_marchpacks(charts: list, custom_order: bool, source_dir: str, ensemble
                             b_parts.append(part_obj)
                             b_pages += part_obj.pagect
 
-                os.makedirs(f"{source_dir}/temp/{instrument['slug']}{book['name']}")
+                assemble_path = f"{source_dir}/temp/{instrument['slug']}{book['name']}"
+
+                os.makedirs(assemble_path)
 
                 if add_toc is True:
                     a_pages += 1
                     toc_data = compile_toc_data(charts, a_parts, b_parts)
-                    toc_path = create_toc(ensemble_info['name'], f"{instrument['name']} {book['name']}", toc_data)
+                    toc_path = create_toc(ensemble_info['name'],
+                                          f"{instrument['name']} {book['name']}",
+                                          assemble_path,
+                                          toc_data)
 
                 if a_pages > b_pages:
                     x_pages = a_pages - b_pages
                     ## merge pdfs with blank pages on b side
-                    impose_and_merge(a_parts, 0, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf", toc=toc_path)
-                    impose_and_merge(b_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf")
+                    impose_and_merge(a_parts, 0, f"{assemble_path}/A.pdf", toc=toc_path)
+                    impose_and_merge(b_parts, x_pages, f"{assemble_path}/B.pdf")
                 else:
                     x_pages = b_pages - a_pages
                     ## merge pdfs with blank pages on a side
-                    impose_and_merge(a_parts, x_pages, f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf", toc=toc_path)
-                    impose_and_merge(b_parts, 0, f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf")
+                    impose_and_merge(a_parts, x_pages, f"{assemble_path}/A.pdf", toc=toc_path)
+                    impose_and_merge(b_parts, 0, f"{assemble_path}/B.pdf")
                 
-                impose_for_printing(f"{source_dir}/temp/{instrument['slug']}{book['name']}/A.pdf",
-                                    f"{source_dir}/temp/{instrument['slug']}{book['name']}/B.pdf", 
+                impose_for_printing(f"{assemble_path}/A.pdf",
+                                    f"{assemble_path}/B.pdf", 
                                     f"{source_dir}/output/{instrument['slug']}{book['name']}.pdf"
                                     )
