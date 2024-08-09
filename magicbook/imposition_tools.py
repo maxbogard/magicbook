@@ -61,17 +61,15 @@ def get_book_path(instrument, source_dir):
     return list_of_paths
 
 
+def impose_and_merge_portrait(part: Part, format: str, blanks: int, output_name: str, toc=None):
+    pass
 
+def merge_parts(parts: list):
 
-def impose_and_merge(parts: list, blanks: int, output_name: str, toc=None):
-    """
-    merges the pdfs from a list of parts, and ads n blank pages to the end
-    then subsequently scales all pages to fit on marchpack-sized paper
-    """ 
+    print("merging parts using new function....")
 
-    new_bytes_object = BytesIO()
+    merged_parts = BytesIO()
 
-    print("merging parts...")
     list_of_stamps = []
     counter = 0
     merger = pypdf.PdfWriter()
@@ -80,12 +78,52 @@ def impose_and_merge(parts: list, blanks: int, output_name: str, toc=None):
         for n in range(0, (merger.get_num_pages() - counter)):
             list_of_stamps.append(part.page_id)
         counter = merger.get_num_pages()
-    merger.write(new_bytes_object)
+    merger.write(merged_parts)
     merger.close()
+
+    return merged_parts, list_of_stamps
+
+
+def create_stamp(stamp: int,
+                 stamp_location: str,
+                 paper_size: tuple,
+                 stamp_font: str,
+                 stamp_size: int):
+        """
+        Given the paper size, stamp location and a list of stamps,
+        creates a series of stamps that can be merged onto a book of parts post-scaling
+        """
+
+        stamp_packet = BytesIO()
+
+        can = canvas.Canvas(stamp_packet, paper_size)
+        can.setFont(stamp_font, stamp_size)
+        if stamp_location == 'bottom_right':
+            can.drawRightString((paper_size[0] - 5), 5, stamp)
+        can.save()
+
+        return stamp_packet
+
+
+def impose_and_merge(parts: list, blanks: int, output_name: str, toc=None):
+    """
+    merges the pdfs from a list of parts, and adds n blank pages to the end
+    then subsequently scales all pages to fit on marchpack-sized paper
+    """ 
+
+    new_bytes_object = BytesIO()
+
+    new_bytes_object, list_of_stamps = merge_parts(parts)
+
+    # note: at this pointin the code new_bytes_object stores the merged PDFs,
+    # without any scaling or stamping
 
     reader = pypdf.PdfReader(new_bytes_object)
     writer = pypdf.PdfWriter()
 
+    # if a table of contents is provided to the function, it is the first PDF added
+    # to the merged and imposed PDF
+    # note that for this to work, we need to always provide a TOC that is pre-scaled!
     if toc is not None:
         toc_reader = pypdf.PdfReader(toc)
         toc_page = toc_reader.get_page(0)
@@ -93,34 +131,53 @@ def impose_and_merge(parts: list, blanks: int, output_name: str, toc=None):
         toc_reader.close()
 
     for n in range(0, reader.get_num_pages()):
+        # opens the PDF stored in the buffer (unscaled parts)
         packet = BytesIO()
-        can = canvas.Canvas(packet, (LYRE_PAPER_X, LYRE_PAPER_Y))
-        can.setFont("Helvetica-Bold", 30)
-        can.drawRightString((LYRE_PAPER_X - 5), 5, list_of_stamps[n])
-        can.save()
+
+        packet = create_stamp(list_of_stamps[n],
+                              'bottom_right',
+                              (LYRE_PAPER_X, LYRE_PAPER_Y),
+                              "Helvetica-Bold",
+                              30
+                              )
         
         page = reader.get_page(n)
-        page.mediabox = page.cropbox
-        xt = (page.mediabox.left * -1)
+        # if the page was cropped, this makes sure we operate on the cropped dimensions
+        page.mediabox = page.cropbox  
+        
+        # moves the content to start at 0,0
+        xt = (page.mediabox.left * -1) 
         yt = (page.mediabox.bottom * -1)
-        newx = page.mediabox.width
-        newy = page.mediabox.height
         trans = pypdf.Transformation().translate(tx=xt, ty=yt)
         page.add_transformation(trans)
+
+        # set of operations to move the mediabox and cropbox to the new content
+        newx = page.mediabox.width
+        newy = page.mediabox.height
         page.cropbox = pypdf.generic.RectangleObject((0, 0, newx, newy))
         page.mediabox = page.cropbox
         h = float(page.mediabox.height)
         w = float(page.mediabox.width)
+
+        # scales to fit the page while maintaining aspect ratio
         scale_factor = min(LYRE_CONTENT_X / w, LYRE_CONTENT_Y / h)
         transform = pypdf.Transformation().scale(scale_factor, scale_factor)
         page.add_transformation(transform)
+
         page.cropbox = pypdf.generic.RectangleObject([0, 0, LYRE_PAPER_X, LYRE_PAPER_Y])
+
+        # opens the previously created stamp from the packet
         new_pdf = pypdf.PdfReader(packet)
         page_new = new_pdf.get_page(0)
         page.mediabox = page_new.mediabox
+
+        # merges the stamp onto the page
         page.merge_page(page_new)   
         writer.add_page(page)
         packet.close()
+
+    # for loop finshed, now appends blank page to the end of the PDF to balance it with
+    # the opposite side of the marchpack
     if blanks > 0:
         for n in range(0, blanks):
             writer.add_blank_page(width=504, height=345.6)

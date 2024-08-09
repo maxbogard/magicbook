@@ -1,0 +1,199 @@
+{
+  "piccolo": {
+    "name": "Flute",
+    "family": "woodwind",
+    "div": 1,
+    "key": "concert",
+    "alternates": ["flute", "keyboards"]
+  },
+  "flute": {
+    "name": "Flute",
+    "family": "woodwind",
+    "div": 1,
+    "key": "concert",
+    "alternates": ["piccolo", "keyboards"]
+  },
+  "oboe": {
+    "name": "Oboe",
+    "family": "woodwind",
+    "div": 1,
+    "key": "concert",
+    "alternates": ["flute", "keyboards", "piccolo"]
+  },
+  "bassoon": {
+    "name": "Bassoon",
+    "family": "woodwind",
+    "div": 1,
+    "key": "concert",
+    "alternates": ["baritonebc", "trombone", "bassguitar", "tuba"]
+  },
+  "clarinet": {
+    "name": "Clarinet",
+    "family": "woodwind",
+    "div": 2,
+    "key": "Bb",
+    "alternates": ["sopranosax", "trumpet", "tenorsax"]
+  },
+  "clarbass": {
+    "name": "Bass Clarinet",
+    "family": "woodwind",
+    "div": 1,
+    "key": "Bb",
+    "alternates": ["tenorsax", "baritonetc"]
+  },
+  "sopranosax": {
+    "name": "Soprano Sax",
+    "family": "saxophone",
+    "div": 1,
+    "key": "Bb",
+    "alternates": ["clarinet", "trumpet", "tenorsax"]
+  },
+  "altosax:": {
+    "name": "Alto Sax",
+    "family": "saxophone",
+    "div": 1,
+    "key": "Eb"
+  },
+  "tenorsax": {
+    "name": "Tenor Sax",
+    "family": "saxophone",
+    "div": 1,
+    "key": "Bb",
+    "alternates": ["baritonetc", "bassclarinet", "sopranosax", "trumpet"]
+  },
+  "barisax": {
+    "name": "Bari Sax",
+    "family": "saxophone",
+    "div": 1,
+    "key": "Eb",
+    "alternates": ["bassguitar", "tuba", "baritonebc", "trombone", "altosax"]
+  },
+  "trumpet": {
+    "name": "Trumpet",
+    "family": "highbrass",
+    "div": 3,
+    "key": "Bb",
+    "alternates": ["sopranosax", "slarinet", "tenorsax"]
+  },
+  "hornf": {
+    "name": "F Horn",
+    "family": "highbrass",
+    "div": 1,
+    "key": "F",
+    "alternates": []
+  },
+  "trombone": {
+    "name": "Trombone",
+    "family": "lowbrass",
+    "div": 2,
+    "key": "bc",
+    "alternates": ["baritonebc", "bassguitar", "tuba"]
+  },
+  "baritonebc": {
+    "name": "Baritone BC",
+    "family": "lowbrass",
+    "div": 1,
+    "key": "bc",
+    "alternates": ["trombone", "bassguitar", "tuba"]
+  },
+  "baritonetc": {
+    "name": "Baritone TC",
+    "family": "lowbrass",
+    "div": 1,
+    "key": "Bb",
+    "alternates": ["tenorsax", "bassclarinet"]
+  },
+  "tuba": {
+    "name": "Tuba",
+    "family": "lowbrass",
+    "div": 1,
+    "key": "bc",
+    "alternates": ["bassguitar", "baritonebc", "trombone"]
+  },
+  "keyboards": {
+    "name": "Keyboards",
+    "family": "percussion",
+    "div": 1,
+    "key": "concert",
+    "alternates": ["flute", "piccolo", "oboe"]
+  },
+  "bassguitar": {
+    "name": "Bass Guitar",
+    "family": "rhythm",
+    "div": 1,
+    "key": "bc",
+    "alternates": ["tuba", "baritonebc", "barisax"]
+  },
+  "drumset": {
+    "name": "Drumset",
+    "family": "rhythm",
+    "div": 1,
+    "key": "percussion",
+    "alternates": [
+      "snaredrum",
+      "multitoms",
+      "bassdrum",
+      "bassguitar",
+      "tuba",
+      "trumpet"
+    ]
+  },
+  "snaredrum": {
+    "name": "Snare Drum",
+    "family": "drumline",
+    "div": 1,
+    "key": "percussion",
+    "alternates": [
+      "drumset",
+      "multitoms",
+      "bassdrum",
+      "bassguitar",
+      "tuba",
+      "trumpet"
+    ]
+  },
+  "multitoms": {
+    "name": "Multi-Toms",
+    "family": "drumline",
+    "div": 1,
+    "key": "percussion",
+    "alternates": [
+      "snaredrum",
+      "drumset",
+      "bassdrum",
+      "bassguitar",
+      "tuba",
+      "trumpet"
+    ]
+  },
+  "bassdrum": {
+    "name": "Bass Drum",
+    "family": "drumline",
+    "div": 1,
+    "key": "percussion",
+    "alternates": [
+      "drumset",
+      "cymbals",
+      "snaredrum",
+      "multitoms",
+      "bassguitar",
+      "tuba",
+      "trumpet"
+    ]
+  },
+  "cymbals": {
+    "name": "Cymbals",
+    "family": "drumline",
+    "div": 1,
+    "key": "percussion",
+    "alternates": [
+      "bassdrum",
+      "drumset",
+      "snaredrum",
+      "multitoms",
+      "bassguitar",
+      "tuba",
+      "trumpet"
+    ]
+  }
+}
