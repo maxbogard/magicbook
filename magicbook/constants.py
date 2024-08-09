@@ -25,7 +25,7 @@ SPLITSORT = {
     ]
 }
 
-## Paper Sizes
+# Paper Sizes
 
 LYRE_PAPER_X = 504
 LYRE_PAPER_Y = 345.6
@@ -33,4 +33,14 @@ LYRE_PAPER_Y = 345.6
 LYRE_CONTENT_X = 475.2
 LYRE_CONTENT_Y = 345.6
 
+LETTER_MARGIN_X = 24
+LETTER_MARGIN_Y = 24
+
 PAGE_FORMATS = ['PORTRAIT', 'LYRE']
+
+MARCHPACK_FORMATS = ('MarchpackSplit', 'MarchpackComprehensive')
+BINDER_FORMATS = ('BinderOnePartPg',
+                  'BinderOneChartPg',
+                  'BinderSaveSomePaper',
+                  'BinderSaveLotsPaper'
+                  )

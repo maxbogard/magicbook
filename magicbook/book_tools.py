@@ -79,19 +79,21 @@ def grab_parts(instruments,
         if instrument['div'] == 1:
             print(f"Generating {instrument['name']} folder!")
             print("===================")
-            divdict = grab_instrument_parts(instrument,
-                                  charts,
-                                  lib_dir,
-                                  issue_dir
-                                  )
+            divdict = grab_instrument_parts(
+                instrument,
+                charts,
+                lib_dir,
+                issue_dir
+                )
         else:
             print(f"Generating {instrument["name"]} folders!")
             print("========================")
-            divdict = grab_instrument_parts(instrument,
-                                  charts,
-                                  lib_dir,
-                                  issue_dir
-                                  )
+            divdict = grab_instrument_parts(
+                instrument,
+                charts,
+                lib_dir,
+                issue_dir
+                )
             # divdict = {}
             # for chart in charts:
             #     for root, dirs, files in os.walk(inspath):
@@ -145,7 +147,13 @@ def grab_parts(instruments,
                     os.remove(itempath)
             print("\n")
         print("\n")
-        with open(os.path.join(issue_dir,instrument['slug'],"MISSING_PARTS.txt"), 'w') as f:
+        with open(
+            os.path.join(
+                issue_dir,
+                instrument['slug'],
+                "MISSING_PARTS.txt"),
+                'w'
+                ) as f:
             f.write(f"Missing parts for {instrument['name']}:\n")
             f.write("========================\n")
             for chart in divdict:
@@ -159,7 +167,8 @@ def assemble_books(lib,
                    output_dir,
                    instruments,
                    ensemble_dir,
-                   SPLITSORT):
+                   SPLITSORT
+                   ):
     """
     Create books to hand out to ensemble members
     with charts for their instrument
@@ -168,16 +177,27 @@ def assemble_books(lib,
     print("What charts are going in this book?")
     selected_charts = lib_query(lib)
     qty = len(selected_charts)
-    lowest_max_id = ((qty // 2) + (qty % 2)) 
+    lowest_max_id = ((qty // 2) + (qty % 2))
     print(f"This marchpack has {qty} charts.")
-    print("What number would you like to assign to the last chart of the B side?")
-    print(f"The minimum number is {lowest_max_id}, and it is recommended to choose a larger number")
-    print("so you have flexibility to add charts in the future. Max. number is 99.")
+    print(
+        "What number would you like to assign to the last chart of the B side?"
+        )
+    print(
+        f"""::The minimum number is {lowest_max_id}, \
+            and it is recommended to choose a larger number"""
+        )
+    print(
+        """so you have flexibility to add charts in the future. \
+            Max. number is 99."""
+        )
     while True:
         max_id = survey.routines.numeric("Last B ID:", decimal=False)
         if max_id < lowest_max_id:
-            print(f"Please choose a number equal to or greater than {lowest_max_id}.")
-        elif max_id > 99: 
+            print(
+                f"""Please choose a number equal to \
+                    or greater than {lowest_max_id}."""
+                    )
+        elif max_id > 99:
             print("Please choose a number less than 100.")
         else:
             break

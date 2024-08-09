@@ -39,17 +39,20 @@ class Chart:
         otherwise, returns the chart title
         """
         return self.title
-    
+
     def path(self, libdir):
         return os.path.join(libdir, self.slug)
-    
+
+
 def strip_part_filename(file, chart_name):
     """
     returns only the name of the part (no chart name or .pdf)
     """
     part_core = file.removeprefix(chart_name)
     for format in PAGE_FORMATS:
-        return_value = part_core.removeprefix(f" {format} ").removesuffix(".pdf")
+        return_value = part_core.removeprefix(
+            f" {format} "
+            ).removesuffix(".pdf")
     return return_value
 
 
@@ -63,7 +66,10 @@ def lib_query(lib):
     while True:
         choices = []
         for cha in lib:
+            print(cha)
+            print(cha.title)
             choices.append(cha.title)
+        print(choices)
         selection = survey.routines.basket('SELECT CHARTS:', options=choices)
         print("\n")
         selected = []
@@ -77,6 +83,7 @@ def lib_query(lib):
             break
     return selected
 
+
 def lib_single_query(loc, pageid=""):
     """
     prompts the user to select a single chart from a list of charts
@@ -85,12 +92,15 @@ def lib_single_query(loc, pageid=""):
     choices = []
     for cha in loc:
         choices.append(cha.title)
-    selection = survey.routines.select(f'SELECT CHART: {pageid}', options=choices)
+    selection = survey.routines.select(
+        f'SELECT CHART: {pageid}',
+        options=choices
+        )
     print("\n")
     selected = loc[selection]
     if pageid is True:
         print(f"{pageid}: - {selected.title}")
-    return selected 
+    return selected
 
 
 def show_chart_details(chart, lib):
