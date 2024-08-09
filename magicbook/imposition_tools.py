@@ -30,15 +30,19 @@ def count_pdf_pages(pdf_path: str) -> int:
     """
     with open(pdf_path, 'rb') as pdf:
         pdf_reader = pypdf.PdfReader(pdf)
-        return pdf_reader.get_num_pages()
+        num_pages = pdf_reader.get_num_pages()
+        pdf_reader.close()
+        print(num_pages)
+        return num_pages
 
 
 class Part(Chart):
-    def __init__(self, chart: Chart, part_title, page_id, part_path):
+    def __init__(self, chart: Chart, part_title, page_id, part_path, format):
         super().__init__(chart.slug, chart.is_single, chart.sl, chart.title)
         self.part_title = part_title
         self.page_id = page_id
         self.part_path = part_path
+        self.format = format
         self.pagect = count_pdf_pages(part_path)
 
 
@@ -92,6 +96,10 @@ def impose_and_merge_portrait(part: Part,
 
 
 def merge_parts(parts: list):
+    """
+    given a list of Parts, merges all parts into a single PDF
+    and returns the merged PDF and a list of chart IDs
+    """
 
     print("merging parts using new function....")
 
@@ -128,16 +136,20 @@ def create_stamp(stamp: int,
     can.setFont(stamp_font, stamp_size)
     if stamp_location == 'bottom_right':
         can.drawRightString((paper_size[0] - 5), 5, stamp)
+    elif stamp_location == 'top_rihgt':
+        can.drawRightString((paper_size[0] - 5), (paper_size[1] - 5), stamp)
     can.save()
 
     return stamp_packet
 
 
-def impose_and_merge(parts: list,
-                     blanks: int,
-                     output_name: str,
-                     format: str,
-                     toc=None):
+def impose_and_merge(
+        parts: list,
+        blanks: int,
+        output_name: str,
+        format: str,
+        toc=None
+        ):
     """
     merges the pdfs from a list of parts, and adds n blank pages to the end
     calls create_stamp to add a chart ID to each page as well
@@ -176,8 +188,9 @@ def impose_and_merge(parts: list,
         writer.add_page(toc_page)
         toc_reader.close()
 
+    # executes the code on each page in the
     for n in range(0, reader.get_num_pages()):
-        # opens the PDF stored in the buffer (unscaled parts)
+        # opens the PDF stored in the buffer (merged unscaled parts)
         packet = BytesIO()
 
         packet = create_stamp(list_of_stamps[n],
@@ -187,6 +200,7 @@ def impose_and_merge(parts: list,
                               30)
 
         page = reader.get_page(n)
+
         # if the page was cropped, this makes sure
         # we operate on the cropped dimensions
         page.mediabox = page.cropbox
@@ -252,7 +266,9 @@ def impose_for_printing(path_to_a: str,
     reader_b = pypdf.PdfReader(path_to_b)
 
     for pg in range(0, reader_n.get_num_pages()):
-        reader_template = pypdf.PdfReader("config/templates/trim-guides.pdf")
+        reader_template = pypdf.PdfReader(
+            "config/templates/trim-guides.pdf"
+            )
         page = reader_template.get_page(0)
         a_page = reader_a.get_page(pg)
         b_page = reader_b.get_page(pg)
@@ -275,11 +291,158 @@ def impose_for_printing(path_to_a: str,
     reader_n.close()
 
 
-def merge_marchpacks(charts: list,
-                     custom_order: bool,
-                     source_dir: str,
-                     ensemble_info: dict,
-                     max_id: int):
+def select_chart_order(charts: list[Chart], abside: bool) -> list[dict]:
+    """
+    Takes a list of charts and asks the user to select how they should be
+    ordered in the book. Can either order A/B based on side of the marchpack,
+    or a non-prefixed numerical value
+    """
+    charts_rem = charts.copy()
+    if abside is True:
+        marchpack_pages = (len(charts_rem) // 2)
+        marchpack_rem = (len(charts_rem) % 2)
+        print('select charts for A side, in order from first to last')
+        a_index = {}
+        a_id = 1
+        for n in range(0, (marchpack_pages)):
+            chart = library_tools.lib_single_query(
+                charts_rem,
+                pageid=f"A{a_id}"
+                )
+            charts_rem.remove(chart)
+            a_index[a_id] = chart
+            a_id += 1
+        print('select charts for B side, in order from first to last')
+        b_index = {}
+        b_id = 1
+        for n in range(0, (marchpack_pages + marchpack_rem)):
+            chart = library_tools.lib_single_query(
+                charts_rem,
+                pageid=f"B{a_id}"
+                )
+            charts_rem.remove(chart)
+            b_index[b_id] = chart
+            b_id += 1
+
+        return [a_index, b_index]
+    else:
+        book_pages = len(charts_rem)
+        print('select charts in order from first to last')
+        x_index = {}
+        x_id = 1
+        for n in range(0, book_pages):
+            chart = library_tools.lib_single_query(
+                charts_rem,
+                pageid=f"{x_id}"
+                )
+            charts_rem.remove(chart)
+            x_index[x_id] = chart
+            x_id += 1
+        return [x_index]
+
+
+def auto_order_charts(charts: list[Chart], abside: bool) -> list[dict]:
+    """
+    Automatically orders the charts in the order they are received
+    returns a list of one or two chart indices
+    """
+    charts_rem = charts.copy()
+    if abside is True:
+        marchpack_pages = (len(charts_rem) // 2)
+        marchpack_rem = (len(charts_rem) % 2)
+        a_index = {}
+        a_id = 1
+        for n in range(0, (marchpack_pages)):
+            a_index[a_id] = charts_rem.pop(0)
+            a_id += 1
+        b_index = {}
+        b_id = 1
+        for n in range(0, (marchpack_pages + marchpack_rem)):
+            b_index[b_id] = charts_rem.pop(0)
+            b_id += 1
+
+        return [a_index, b_index]
+    else:
+        book_pages = len(charts_rem)
+        x_index = {}
+        x_id = 1
+        for n in range(0, book_pages):
+            x_index[x_id] = charts_rem.pop(0)
+            x_id += 1
+        return [x_index]
+
+
+def pdf_path_list(path: str, index: dict, format: str, prefix=None) -> list:
+    """
+    given an index, rturns a list of pdf paths
+    """
+    for f in MARCHPACK_FORMATS:
+        if format is f:
+            preferred_format = "LYRE"
+            other_format = "PORTRAIT"
+        else:
+            preferred_format = "PORTRAIT"
+            other_format = "LYRE"
+
+    if prefix is None:
+        pre = ''
+    else:
+        pre = prefix
+
+    pdf_list = []
+    pdf_pages = 0
+    for chart_id in index.keys():
+        prefer_find = []
+        other_find = []
+        for file in os.listdir(path):
+            if index[chart_id].slug in file:
+                if preferred_format in file:
+                    print(f"found {index[chart_id].slug}")
+                    print(f"in file {file}")
+                    prefer_find.append(file)
+                else:
+                    other_find.append(file)
+        for part in prefer_find:
+            print(f"part in prefer_find: {part}")
+
+            part_slug = strip_part_filename(
+                part,
+                index[chart_id].slug
+            )
+            part_obj = Part(
+                index[chart_id],
+                part_slug,
+                f'{pre}{chart_id}',
+                os.path.join(path, part),
+                preferred_format
+            )
+            pdf_list.append(part_obj)
+            pdf_pages += part_obj.pagect
+        for part in other_find:
+            part_slug = strip_part_filename(
+                part,
+                index[chart_id].slug
+            )
+            if part_slug not in prefer_find:
+                part_obj = Part(
+                    index[chart_id],
+                    part_slug,
+                    f'{pre}{chart_id}',
+                    os.path.join(path, part),
+                    other_format
+                    )
+                pdf_list.append(part_obj)
+                pdf_pages += part_obj.pagect
+    return pdf_list, pdf_pages
+
+
+def merge_marchpacks(
+        charts: list,
+        custom_order: bool,
+        source_dir: str,
+        ensemble_info: dict,
+        max_id: int
+        ):
     """
     For each instrument, assembles all parts into a single pdf,
     with a specified order and page size.
@@ -289,81 +452,64 @@ def merge_marchpacks(charts: list,
     # - eventually these should be passed through arguments
     add_toc = True
     book_format = 'MarchpackComprehensive'
+
     # !!!
 
-    total_charts = len(charts)
-    marchpack_pages = (total_charts // 2)
-    marchpack_diff = (total_charts % 2)
-
     if custom_order is True:
-        charts_rem = charts.copy()
-        print("select charts for A side")
-        a_index = {}
-        a_id = 1
-        for n in range(0, (marchpack_pages + marchpack_diff)):
-            chart = library_tools.lib_single_query(charts_rem,
-                                                   pageid=f"A{a_id}"
-                                                   )
-            charts_rem.remove(chart)
-            a_index[a_id] = chart
-            a_id += 1
-        b_index = {}
-        b_id = ((max_id - marchpack_pages) + 1)
-        print("select charts for B side")
-        for n in range(0, (marchpack_pages)):
-            chart = library_tools.lib_single_query(charts_rem,
-                                                   pageid=f"B{b_id}"
-                                                   )
-            charts_rem.remove(chart)
-            b_index[b_id] = chart
-            b_id += 1
+        book_index = select_chart_order(charts, custom_order)
     else:
-        charts_rem = charts.copy()
-        a_index = {}
-        a_id = 1
-        for n in range(0, (marchpack_pages + marchpack_diff)):
-            a_index[a_id] = chart[0]
-            charts_rem.pop(0)
-            a_id += 1
-        b_index = {}
-        b_id = ((max_id - marchpack_pages) + 1)
-        for n in range(0, (marchpack_pages)):
-            b_index[b_id] = chart[0]
-            charts_rem.pop(0)
-            b_id += 1
+        book_index = auto_order_charts(charts)
+
+    # temporary before refactoring
+    a_index = book_index[0]
+    b_index = book_index[1]
 
     for instrument in ensemble_info['instruments']:
         if instrument['div'] == 1:
             path = os.path.join(source_dir, instrument['slug'])
             print(f'merging {instrument["name"]} book')
-            a_parts = []
-            a_pages = 0
-            for chart_id in a_index.keys():
-                for file in os.listdir(path):
-                    if a_index[chart_id].slug in file:
-                        part_slug = strip_part_filename(
-                            file,
-                            a_index[chart_id].slug)
-                        part_obj = Part(a_index[chart_id],
-                                        part_slug,
-                                        f"A{chart_id}",
-                                        os.path.join(path, file))
-                        a_parts.append(part_obj)
-                        a_pages += part_obj.pagect
-            b_parts = []
-            b_pages = 0
-            for chart_id in b_index.keys():
-                for file in os.listdir(path):
-                    if b_index[chart_id].slug in file:
-                        part_slug = strip_part_filename(
-                            file,
-                            b_index[chart_id].slug)
-                        part_obj = Part(b_index[chart_id],
-                                        part_slug,
-                                        f"B{chart_id}",
-                                        os.path.join(path, file))
-                        b_parts.append(part_obj)
-                        b_pages += part_obj.pagect
+            # a_parts = []
+            # a_pages = 0
+            # for chart_id in a_index.keys():
+            #     for file in os.listdir(path):
+            #         if a_index[chart_id].slug in file:
+            #             part_slug = strip_part_filename(
+            #                 file,
+            #                 a_index[chart_id].slug)
+            #             part_obj = Part(
+            #                 a_index[chart_id],
+            #                 part_slug,
+            #                 f"A{chart_id}",
+            #                 os.path.join(path, file)
+            #                 )
+            #             a_parts.append(part_obj)
+            #             a_pages += part_obj.pagect
+            # b_parts = []
+            # b_pages = 0
+            # for chart_id in b_index.keys():
+            #     for file in os.listdir(path):
+            #         if b_index[chart_id].slug in file:
+            #             part_slug = strip_part_filename(
+            #                 file,
+            #                 b_index[chart_id].slug)
+            #             part_obj = Part(b_index[chart_id],
+            #                             part_slug,
+            #                             f"B{chart_id}",
+            #                             os.path.join(path, file))
+            #             b_parts.append(part_obj)
+            #             b_pages += part_obj.pagect
+            a_parts, a_pages = pdf_path_list(
+                path,
+                a_index,
+                book_format,
+                prefix='A'
+                )
+            b_parts, b_pages = pdf_path_list(
+                path,
+                b_index,
+                book_format,
+                prefix='B'
+                )
 
             assemble_path = f"{source_dir}/temp/{instrument['slug']}"
 
@@ -422,37 +568,39 @@ def merge_marchpacks(charts: list,
                                     instrument['slug'],
                                     book['name'])
                 print(f"merging{instrument['name']} {book['name']}:")
-                a_parts = []
-                a_pages = 0
-                for chart_id in a_index.keys():
-                    for file in os.listdir(path):
-                        if a_index[chart_id].slug in file:
-                            part_slug = strip_part_filename(
-                                file,
-                                a_index[chart_id].slug)
-                            part_obj = Part(a_index[chart_id],
-                                            part_slug,
-                                            f"A{chart_id}",
-                                            os.path.join(path,
-                                                         file
-                                                         ))
-                            a_parts.append(part_obj)
-                            a_pages += part_obj.pagect
-                b_parts = []
-                b_pages = 0
-                for chart_id in b_index.keys():
-                    for file in os.listdir(path):
-                        if b_index[chart_id].slug in file:
-                            part_slug = strip_part_filename(
-                                file,
-                                b_index[chart_id].slug)
-                            part_obj = Part(b_index[chart_id],
-                                            part_slug,
-                                            f"B{chart_id}",
-                                            os.path.join(path,
-                                                         file))
-                            b_parts.append(part_obj)
-                            b_pages += part_obj.pagect
+                # a_parts = []
+                # a_pages = 0
+                # for chart_id in a_index.keys():
+                #     for file in os.listdir(path):
+                #         if a_index[chart_id].slug in file:
+                #             part_slug = strip_part_filename(
+                #                 file,
+                #                 a_index[chart_id].slug)
+                #             part_obj = Part(a_index[chart_id],
+                #                             part_slug,
+                #                             f"A{chart_id}",
+                #                             os.path.join(path,
+                #                                          file
+                #                                          ))
+                #             a_parts.append(part_obj)
+                #             a_pages += part_obj.pagect
+                # b_parts = []
+                # b_pages = 0
+                # for chart_id in b_index.keys():
+                #     for file in os.listdir(path):
+                #         if b_index[chart_id].slug in file:
+                #             part_slug = strip_part_filename(
+                #                 file,
+                #                 b_index[chart_id].slug)
+                #             part_obj = Part(b_index[chart_id],
+                #                             part_slug,
+                #                             f"B{chart_id}",
+                #                             os.path.join(path,
+                #                                          file))
+                #             b_parts.append(part_obj)
+                #             b_pages += part_obj.pagect
+                a_parts, a_pages = pdf_path_list(path, a_index, book_format)
+                b_parts, b_pages = pdf_path_list(path, b_index, book_format)
 
                 assemble_path = f"""{source_dir}/temp/\
                 {instrument['slug']}{book['name']}"""
@@ -497,10 +645,9 @@ def merge_marchpacks(charts: list,
                                      f"{assemble_path}/B.pdf",
                                      book_format
                                      )
-
+                pdfname = f'{instrument['slug']}{book['name']}.pdf'
                 impose_for_printing(
                     f"{assemble_path}/A.pdf",
                     f"{assemble_path}/B.pdf",
-                    f"""{source_dir}/output/\
-                        {instrument['slug']}{book['name']}.pdf"""
+                    f"{source_dir}/output/{pdfname}"
                     )

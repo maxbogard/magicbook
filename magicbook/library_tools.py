@@ -48,12 +48,13 @@ def strip_part_filename(file, chart_name):
     """
     returns only the name of the part (no chart name or .pdf)
     """
-    part_core = file.removeprefix(chart_name)
+    part_core = file.removeprefix(chart_name).removesuffix(".pdf")
     for format in PAGE_FORMATS:
-        return_value = part_core.removeprefix(
-            f" {format} "
-            ).removesuffix(".pdf")
-    return return_value
+        if format in part_core:
+            return part_core.removeprefix(
+                f" {format} "
+                )
+    return part_core
 
 
 def lib_query(lib):

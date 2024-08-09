@@ -72,10 +72,12 @@ def main():
     output_dir = config['directories']['output']
     active_ensemble = os.path.join(CONFIG_DIR, config['default-ensemble'])
 
-    options = ["Query Charts",
-               "Assemble Books",
-               "Impose Created Books",
-               "Exit"]
+    options = [
+        "Query Charts",
+        "Assemble Books",
+        "Impose Created Books",
+        "Exit"
+        ]
 
     print(
         f"opening library {library_path}, auditing charts"

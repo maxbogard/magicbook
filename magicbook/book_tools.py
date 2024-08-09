@@ -162,13 +162,14 @@ def grab_parts(instruments,
                     f.write("\n")
 
 
-def assemble_books(lib,
-                   lib_dir,
-                   output_dir,
-                   instruments,
-                   ensemble_dir,
-                   SPLITSORT
-                   ):
+def assemble_books(
+        lib,
+        lib_dir,
+        output_dir,
+        instruments,
+        ensemble_dir,
+        SPLITSORT
+        ):
     """
     Create books to hand out to ensemble members
     with charts for their instrument
@@ -201,11 +202,13 @@ def assemble_books(lib,
             print("Please choose a number less than 100.")
         else:
             break
+
     # parts_in_book = list_parts(selected_charts, lib_dir)
-    grab_parts(instruments,
-               selected_charts,
-               issue_dir,
-               lib_dir,
-               SPLITSORT
-               )
+    grab_parts(
+        instruments,
+        selected_charts,
+        issue_dir,
+        lib_dir,
+        SPLITSORT
+        )
     return selected_charts, issue_dir, max_id
