@@ -17,8 +17,8 @@ from constants import (SPLITSORT,
                        LYRE_PAPER_Y,
                        LYRE_CONTENT_X,
                        LYRE_CONTENT_Y,
-                       LETTER_MARGIN_X,
-                       LETTER_MARGIN_Y,
+                       #    LETTER_MARGIN_X,
+                       #    LETTER_MARGIN_Y,
                        MARCHPACK_FORMATS,
                        BINDER_FORMATS
                        )
@@ -135,9 +135,17 @@ def create_stamp(stamp: int,
     can = canvas.Canvas(stamp_packet, paper_size)
     can.setFont(stamp_font, stamp_size)
     if stamp_location == 'bottom_right':
-        can.drawRightString((paper_size[0] - 5), 5, stamp)
-    elif stamp_location == 'top_rihgt':
-        can.drawRightString((paper_size[0] - 5), (paper_size[1] - 5), stamp)
+        can.drawRightString(
+            (paper_size[0] - 5),
+            5,
+            stamp
+            )
+    elif stamp_location == 'top_right':
+        can.drawRightString(
+            (paper_size[0] - 5),
+            (paper_size[1] - (stamp_size + 5)),
+            stamp
+            )
     can.save()
 
     return stamp_packet
@@ -153,7 +161,7 @@ def impose_and_merge(
     """
     merges the pdfs from a list of parts, and adds n blank pages to the end
     calls create_stamp to add a chart ID to each page as well
-    then subsequently scales all pages to fit on marchpack-sized paper
+    then subsequently scales all pages to fit on selected paper
     """
 
     if format in MARCHPACK_FORMATS:
@@ -161,11 +169,17 @@ def impose_and_merge(
         paper_y = LYRE_PAPER_Y
         content_x = LYRE_CONTENT_X
         content_y = LYRE_CONTENT_Y
+        stamp_location = 'bottom_right'
+        stamp_size = 30
     elif format in BINDER_FORMATS:
         paper_x = letter[0]
         paper_y = letter[1]
-        content_x = (paper_x - LETTER_MARGIN_X)
-        content_y = (paper_y - LETTER_MARGIN_Y)
+        content_x = paper_x
+        content_y = paper_y
+        # content_x = (paper_x - (LETTER_MARGIN_X * 2))
+        # content_y = (paper_y - (LETTER_MARGIN_Y * 2))
+        stamp_location = 'top_right'
+        stamp_size = 40
 
     new_bytes_object = BytesIO()
 
@@ -194,10 +208,10 @@ def impose_and_merge(
         packet = BytesIO()
 
         packet = create_stamp(list_of_stamps[n],
-                              'bottom_right',
+                              stamp_location,
                               (paper_x, paper_y),
                               "Helvetica-Bold",
-                              30)
+                              stamp_size)
 
         page = reader.get_page(n)
 
@@ -211,7 +225,8 @@ def impose_and_merge(
         trans = pypdf.Transformation().translate(tx=xt, ty=yt)
         page.add_transformation(trans)
 
-        # set of operations to move the mediabox and cropbox to the new content
+        # set of operations to move the mediabox and cropbox
+        # to the new location of the content
         newx = page.mediabox.width
         newy = page.mediabox.height
         page.cropbox = pypdf.generic.RectangleObject((0, 0, newx, newy))
@@ -226,14 +241,20 @@ def impose_and_merge(
 
         page.cropbox = pypdf.generic.RectangleObject([0, 0, paper_x, paper_y])
 
+        print(f"{list_of_stamps[n]}: {h}")
         # opens the previously created stamp from the packet
         new_pdf = pypdf.PdfReader(packet)
         page_new = new_pdf.get_page(0)
         page.mediabox = page_new.mediabox
 
-        # merges the stamp onto the page
-        page.merge_page(page_new)
-        writer.add_page(page)
+        # merges the page onto the stamp
+        page_new.merge_transformed_page(
+            page,
+            pypdf.Transformation().translate(
+                tx=0,
+                ty=((content_y - (h * scale_factor)) / 2)
+            ))
+        writer.add_page(page_new)
         packet.close()
 
     # for loop finshed, now appends blank page
@@ -423,7 +444,8 @@ def pdf_path_list(path: str, index: dict, format: str, prefix=None) -> list:
                 part,
                 index[chart_id].slug
             )
-            if part_slug not in prefer_find:
+            print(f"found non-preferred format {part_slug}")
+            if any(part_slug in s for s in prefer_find) is False:
                 part_obj = Part(
                     index[chart_id],
                     part_slug,
@@ -441,7 +463,8 @@ def merge_marchpacks(
         custom_order: bool,
         source_dir: str,
         ensemble_info: dict,
-        max_id: int
+        max_id: int,
+        book_format: str
         ):
     """
     For each instrument, assembles all parts into a single pdf,
@@ -451,7 +474,7 @@ def merge_marchpacks(
     # !!! function settings here
     # - eventually these should be passed through arguments
     add_toc = True
-    book_format = 'MarchpackComprehensive'
+    # book_format = 'MarchpackComprehensive'
 
     # !!!
 
@@ -468,36 +491,7 @@ def merge_marchpacks(
         if instrument['div'] == 1:
             path = os.path.join(source_dir, instrument['slug'])
             print(f'merging {instrument["name"]} book')
-            # a_parts = []
-            # a_pages = 0
-            # for chart_id in a_index.keys():
-            #     for file in os.listdir(path):
-            #         if a_index[chart_id].slug in file:
-            #             part_slug = strip_part_filename(
-            #                 file,
-            #                 a_index[chart_id].slug)
-            #             part_obj = Part(
-            #                 a_index[chart_id],
-            #                 part_slug,
-            #                 f"A{chart_id}",
-            #                 os.path.join(path, file)
-            #                 )
-            #             a_parts.append(part_obj)
-            #             a_pages += part_obj.pagect
-            # b_parts = []
-            # b_pages = 0
-            # for chart_id in b_index.keys():
-            #     for file in os.listdir(path):
-            #         if b_index[chart_id].slug in file:
-            #             part_slug = strip_part_filename(
-            #                 file,
-            #                 b_index[chart_id].slug)
-            #             part_obj = Part(b_index[chart_id],
-            #                             part_slug,
-            #                             f"B{chart_id}",
-            #                             os.path.join(path, file))
-            #             b_parts.append(part_obj)
-            #             b_pages += part_obj.pagect
+
             a_parts, a_pages = pdf_path_list(
                 path,
                 a_index,
@@ -553,10 +547,25 @@ def merge_marchpacks(
                                  f"{assemble_path}/B.pdf",
                                  book_format)
 
-            impose_for_printing(f"{assemble_path}/A.pdf",
-                                f"{assemble_path}/B.pdf",
-                                f"{source_dir}/output/{instrument['slug']}.pdf"
-                                )
+            if book_format in MARCHPACK_FORMATS:
+                impose_for_printing(
+                    f"{assemble_path}/A.pdf",
+                    f"{assemble_path}/B.pdf",
+                    f"{source_dir}/output/{instrument['slug']}.pdf"
+                                    )
+            else:
+                if os.path.exists(f"{source_dir}/output/") is False:
+                    os.makedirs(f"{source_dir}/output/")
+                merger = pypdf.PdfWriter()
+
+                for pdf in [
+                        f"{assemble_path}/A.pdf",
+                        f"{assemble_path}/B.pdf"
+                        ]:
+                    merger.append(pdf)
+
+                merger.write(f"{source_dir}/output/{instrument['slug']}.pdf")
+                merger.close()
 
         elif instrument['div'] < 1:
             raise ValueError("""an instrument can't be divided
@@ -568,37 +577,7 @@ def merge_marchpacks(
                                     instrument['slug'],
                                     book['name'])
                 print(f"merging{instrument['name']} {book['name']}:")
-                # a_parts = []
-                # a_pages = 0
-                # for chart_id in a_index.keys():
-                #     for file in os.listdir(path):
-                #         if a_index[chart_id].slug in file:
-                #             part_slug = strip_part_filename(
-                #                 file,
-                #                 a_index[chart_id].slug)
-                #             part_obj = Part(a_index[chart_id],
-                #                             part_slug,
-                #                             f"A{chart_id}",
-                #                             os.path.join(path,
-                #                                          file
-                #                                          ))
-                #             a_parts.append(part_obj)
-                #             a_pages += part_obj.pagect
-                # b_parts = []
-                # b_pages = 0
-                # for chart_id in b_index.keys():
-                #     for file in os.listdir(path):
-                #         if b_index[chart_id].slug in file:
-                #             part_slug = strip_part_filename(
-                #                 file,
-                #                 b_index[chart_id].slug)
-                #             part_obj = Part(b_index[chart_id],
-                #                             part_slug,
-                #                             f"B{chart_id}",
-                #                             os.path.join(path,
-                #                                          file))
-                #             b_parts.append(part_obj)
-                #             b_pages += part_obj.pagect
+
                 a_parts, a_pages = pdf_path_list(path, a_index, book_format)
                 b_parts, b_pages = pdf_path_list(path, b_index, book_format)
 
@@ -646,8 +625,23 @@ def merge_marchpacks(
                                      book_format
                                      )
                 pdfname = f'{instrument['slug']}{book['name']}.pdf'
-                impose_for_printing(
-                    f"{assemble_path}/A.pdf",
-                    f"{assemble_path}/B.pdf",
-                    f"{source_dir}/output/{pdfname}"
-                    )
+
+                if book_format in MARCHPACK_FORMATS:
+                    impose_for_printing(
+                        f"{assemble_path}/A.pdf",
+                        f"{assemble_path}/B.pdf",
+                        f"{source_dir}/output/{pdfname}"
+                        )
+                else:
+                    if os.path.exists(f"{source_dir}/output/") is False:
+                        os.makedirs(f"{source_dir}/output/")
+                    merger = pypdf.PdfWriter()
+
+                    for pdf in [
+                            f"{assemble_path}/A.pdf",
+                            f"{assemble_path}/B.pdf"
+                            ]:
+                        merger.append(pdf)
+
+                    merger.write(f"{source_dir}/output/{pdfname}")
+                    merger.close()

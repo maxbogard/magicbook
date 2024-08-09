@@ -11,7 +11,7 @@ from book_tools import assemble_books
 # from book_tools import Instrument
 from imposition_tools import merge_marchpacks
 
-from constants import SPLITSORT
+from constants import SPLITSORT, MARCHPACK_FORMATS, BINDER_FORMATS
 
 # various unorganized config files
 
@@ -79,6 +79,11 @@ def main():
         "Exit"
         ]
 
+    book_formats = []
+    book_formats.extend(MARCHPACK_FORMATS)
+    book_formats.extend(BINDER_FORMATS)
+    book_formats.append("Return to Main Menu")
+
     print(
         f"opening library {library_path}, auditing charts"
     )
@@ -119,13 +124,53 @@ def main():
                 SPLITSORT
                 )
             if survey.routines.inquire("Impose PDFS?", default=True) is True:
-                merge_marchpacks(
-                    selected_charts,
-                    True,
-                    issue_dir,
-                    ensemble_info,
-                    max_id
-                    )
+                while True:
+                    print('SELECT BOOK FORMAT:')
+                    format_menu = TerminalMenu(book_formats)
+                    format_entry_index = format_menu.show()
+                    if book_formats[format_entry_index] == 'MarchpackSplit':
+                        print('Not yet implemented')
+                    elif book_formats[
+                            format_entry_index
+                            ] == 'MarchpackComprehensive':
+                        merge_marchpacks(
+                            selected_charts,
+                            True,
+                            issue_dir,
+                            ensemble_info,
+                            max_id,
+                            book_format='MarchpackComprehensive'
+                            )
+                        going_home()
+                        break
+                    elif book_formats[format_entry_index] == 'BinderOnePartPg':
+                        merge_marchpacks(
+                            selected_charts,
+                            True,
+                            issue_dir,
+                            ensemble_info,
+                            max_id,
+                            book_format='BinderOnePartPg'
+                            )
+                        going_home()
+                        break
+                    elif book_formats[
+                            format_entry_index
+                            ] == 'BinderOneChartPg':
+                        print('Not yet implemented')
+                    elif book_formats[
+                            format_entry_index
+                            ] == 'BinderSaveSomePaper':
+                        print('Not yet implemented')
+                    elif book_formats[
+                            format_entry_index
+                            ] == 'BinderSaveLotsPaper':
+                        print('Not yet implemented')
+                    elif book_formats[
+                            format_entry_index
+                            ] == '(Return to Main Menu)':
+                        break
+
             going_home()
         elif options[menu_entry_index] == "Impose Created Books":
             if output_dir is False:
