@@ -8,6 +8,7 @@
     "logs": "./logs/"
   },
   "default-ensemble": "generic_ensemble.json",
+  "default-instruments": "instruments.json",
   "paper-sizes": {
     "Marchpack": {
       "width": 504,

@@ -42,36 +42,83 @@ def list_parts(chart, lib_dir):
     return output_list
 
 
+def parts_grabber(parts, ins_slug, out_slug, input, output):
+    n = 0
+    p_slugs_found = []
+    for c_slug, p_slug, fil in parts:
+        if f" {ins_slug}" in p_slug:
+            # space character filters out an instrument[slug] that is
+            # potentially a substring of another instrument[slug]
+            with open(os.path.join(input, c_slug, fil), 'rb') as source:
+                with open(os.path.join(
+                        output,
+                        out_slug,
+                        (c_slug + p_slug)
+                        ), 'wb') as dest:
+                    shutil.copyfileobj(source, dest)
+                    p_slug_short = strip_part_filename(p_slug, c_slug)
+                    print(f" - added {c_slug} {p_slug_short}")
+
+            # this should stop portrait and landscape parts from
+            # being counted as separate parts
+            if p_slug_short not in p_slugs_found:
+                n += 1
+            p_slugs_found.append(p_slug_short)
+    return n
+
+
 def grab_instrument_parts(instrument, charts, input, output):
     inst_charts_info = {}
     for chart in charts:
-        n = 0
-        parts = list_parts(chart, input)
-        p_slugs_found = []
-        for c_slug, p_slug, fil in parts:
-            if f" {instrument['slug']}" in p_slug:
-                # space character filters out an instrument[slug] that is
-                # potentially a substring of another instrument[slug]
-                with open(os.path.join(input, c_slug, fil), 'rb') as source:
-                    with open(os.path.join(output,
-                                           instrument['slug'],
-                                           (c_slug + p_slug)
-                                           ), 'wb') as dest:
-                        shutil.copyfileobj(source, dest)
-                        p_slug_short = strip_part_filename(p_slug, c_slug)
-                        print(f" - added {c_slug} {p_slug_short}")
+        n = parts_grabber(
+            list_parts(chart, input),
+            instrument['slug'],
+            instrument['slug'],
+            input,
+            output
+            )
+        # n = 0
+        # parts = list_parts(chart, input)
+        # p_slugs_found = []
+        # for c_slug, p_slug, fil in parts:
+        #     if f" {instrument['slug']}" in p_slug:
+        #         # space character filters out an instrument[slug] that is
+        #         # potentially a substring of another instrument[slug]
+        #         with open(os.path.join(input, c_slug, fil), 'rb') as source:
+        #             with open(os.path.join(output,
+        #                                    instrument['slug'],
+        #                                    (c_slug + p_slug)
+        #                                    ), 'wb') as dest:
+        #                 shutil.copyfileobj(source, dest)
+        #                 p_slug_short = strip_part_filename(p_slug, c_slug)
+        #                 print(f" - added {c_slug} {p_slug_short}")
 
-                # this should stop portrait and landscape parts from
-                # being counted as separate parts
-                if p_slug_short not in p_slugs_found:
-                    n += 1
-                p_slugs_found.append(p_slug_short)
-
+        #         # this should stop portrait and landscape parts from
+        #         # being counted as separate parts
+        #         if p_slug_short not in p_slugs_found:
+        #             n += 1
+        #         p_slugs_found.append(p_slug_short)
         if n < 1:
-            print(f"!!! MISSING {chart.title}")
-            inst_charts_info[chart.slug] = 0
+            alternates = instrument['alternates']
+            r = 0
+            for alternate in alternates:
+                r = parts_grabber(
+                    list_parts(chart, input),
+                    alternate,
+                    instrument['slug'],
+                    input,
+                    output
+                    )
+                if r > 0:
+                    inst_charts_info[chart.slug] = r
+                    break
+            if r == 0:
+                print(f"!!! MISSING {chart.title}")
+                inst_charts_info[chart.slug] = 0
+
         else:
             inst_charts_info[chart.slug] = n
+
     print('\n')
     return inst_charts_info
 

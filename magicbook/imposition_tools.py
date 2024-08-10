@@ -315,7 +315,10 @@ def impose_for_printing(path_to_a: str,
     reader_n.close()
 
 
-def select_chart_order(charts: list[Chart], abside: bool) -> list[dict]:
+def select_chart_order(
+        charts: list[Chart],
+        abside: bool,
+        maxid=None) -> list[dict]:
     """
     Takes a list of charts and asks the user to select how they should be
     ordered in the book. Can either order A/B based on side of the marchpack,
@@ -338,7 +341,7 @@ def select_chart_order(charts: list[Chart], abside: bool) -> list[dict]:
             a_id += 1
         print('select charts for B side, in order from first to last')
         b_index = {}
-        b_id = 1
+        b_id = ((maxid - marchpack_pages) + 1)
         for n in range(0, (marchpack_pages + marchpack_rem)):
             chart = library_tools.lib_single_query(
                 charts_rem,
@@ -482,7 +485,7 @@ def merge_marchpacks(
     # !!!
 
     if custom_order is True:
-        book_index = select_chart_order(charts, custom_order)
+        book_index = select_chart_order(charts, custom_order, maxid=max_id)
     else:
         book_index = auto_order_charts(charts)
 

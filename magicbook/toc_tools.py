@@ -254,7 +254,7 @@ def create_toc(
         canvas.restoreState()
 
     toc_title = Paragraph(
-        f"<b><i>{ensemble_name}: {book_name} book</i></b>",
+        f"<b><i>{ensemble_name}: {book_name} Book</i></b>",
         style_toc_title
         )
 

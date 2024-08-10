@@ -34,6 +34,15 @@ def load_ensemble(ensemble):
     return ensemble_info
 
 
+def load_instruments(instruments):
+    """
+    Load a JSON default instruments file
+    """
+    with open(instruments) as instruments:
+        instrument_defaults = json.load(instruments)
+    return instrument_defaults
+
+
 # and now the code begins...
 def list_assembled_books(dir):
     """
@@ -70,7 +79,12 @@ def main():
     chart_schema = os.path.join(schema_dir, 'chart-info.json')
     library_path = config['directories']['library']
     output_dir = config['directories']['output']
-    active_ensemble = os.path.join(CONFIG_DIR, config['default-ensemble'])
+    # active_ensemble = os.path.join(CONFIG_DIR, config['default-ensemble'])
+    active_ensemble = os.path.join(CONFIG_DIR, 'ensembles/bcrband.json')
+    default_instruments = os.path.join(
+        CONFIG_DIR,
+        config['default-instruments']
+        )
 
     options = [
         "Query Charts",
@@ -97,8 +111,15 @@ def main():
         print(f'The library passed the audit with all {t} charts valid!\n')
 
     ensemble_info = load_ensemble(active_ensemble)
+    default_instruments = load_instruments(default_instruments)
 
     ensemble_instruments = ensemble_info['instruments']
+    for instrument in ensemble_instruments:
+        if instrument.get('alternates') is None:
+            if instrument['slug'] in default_instruments.keys():
+                instrument['alternates'] = (
+                    default_instruments[instrument['slug']]['alternates']
+                )
     ensemble_dir = ensemble_info['slug']
 
     print(
