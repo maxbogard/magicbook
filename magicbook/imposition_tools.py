@@ -142,7 +142,7 @@ def create_stamp(stamp,
             )
     elif stamp_location == 'top_right':
         can.drawRightString(
-            (paper_size[0] - 5),
+            (paper_size[0] - 10),
             (paper_size[1] - (stamp_size + 5)),
             stamp
             )
@@ -253,8 +253,10 @@ def impose_and_merge(
             page,
             pypdf.Transformation().translate(
                 tx=0,
-                ty=((content_y - (h * scale_factor)) / 2)
-            ))
+                ty=((content_y - (h * scale_factor)) / 2),
+            ),
+            False
+            )
         writer.add_page(page_new)
         packet.close()
 
@@ -340,7 +342,7 @@ def select_chart_order(charts: list[Chart], abside: bool) -> list[dict]:
         for n in range(0, (marchpack_pages + marchpack_rem)):
             chart = library_tools.lib_single_query(
                 charts_rem,
-                pageid=f"B{a_id}"
+                pageid=f"B{b_id}"
                 )
             charts_rem.remove(chart)
             b_index[b_id] = chart

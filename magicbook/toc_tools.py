@@ -101,6 +101,7 @@ def create_toc(
         margin_bottom = LYRE_MARGIN_BOTTOM
         font_size = 9
         song_font_size = 8
+        title_font_size = 18
         column_widths = [145, 72, 20]
     elif format in BINDER_FORMATS:
         # page_format = "PORTRAIT"
@@ -110,7 +111,8 @@ def create_toc(
         margin_bottom = LETTER_MARGIN_Y
         font_size = 12
         song_font_size = 10
-        column_widths = [388, 166, 28]
+        title_font_size = 24
+        column_widths = [160, 80, 24]
 
     toc_path = f"{output_loc}/toc.pdf"
     doc = BaseDocTemplate(
@@ -125,8 +127,29 @@ def create_toc(
 
     style_title = getSampleStyleSheet()['Title']
 
+    style_toc_title = ParagraphStyle(
+        name='TOC Title',
+        parent=style_title,
+        fontSize=title_font_size,
+    )
+
     style_cell = getSampleStyleSheet()['BodyText']
     style_cell.alignment = TA_LEFT
+
+    style_toc_h = ParagraphStyle(
+        name='Chart Cell',
+        parent=style_cell,
+        fontName='Helvetica-Bold',
+        fontSize=font_size,
+        leading=font_size*1.2
+    )
+
+    style_chart = ParagraphStyle(
+        name='Chart Cell',
+        parent=style_cell,
+        fontSize=font_size,
+        leading=font_size*1.2
+    )
 
     style_part = ParagraphStyle(
         name='Part Cell',
@@ -153,7 +176,22 @@ def create_toc(
         bulletIndent=4
         )
 
-    toc_with_songs = [['CHART', 'PART', '##']]
+    toc_with_songs = [
+        [
+            Paragraph(
+                'CHART',
+                style_toc_h
+                ),
+            Paragraph(
+                'PART',
+                style_toc_h
+                ),
+            Paragraph(
+                '##',
+                style_toc_h
+                )
+            ]
+        ]
     row_counter = 0
     style = [('FONTNAME',       (0, 0), (-1, 0), 'Helvetica-Bold'),
              ('LEFTPADDING',    (0, 0), (-1, -1), 0),
@@ -162,7 +200,7 @@ def create_toc(
              ('BOTTOMPADDING',  (0, 0), (-1, -1), 0),
              ('LINEBELOW',      (0, 0), (-1, 0), 1, colors.black),
              ('VALIGN',         (0, 0), (-1, -1), 'MIDDLE'),
-             ('FONTSIZE',       (0, 1), (-1, -1), 10),]
+             ('FONTSIZE',       (0, 1), (-1, -1), font_size),]
 
     # height_rows = [16]
 
@@ -170,7 +208,7 @@ def create_toc(
         row_counter += 1
         # height_rows.append(16)
         toc_with_songs.append(
-            [Paragraph(entry[0], style_cell),
+            [Paragraph(entry[0], style_chart),
              Paragraph(entry[1], style_part),
              entry[2]])
         if entry[3] != []:
@@ -198,14 +236,14 @@ def create_toc(
         doc.leftMargin,
         doc.bottomMargin,
         doc.width/2-5,
-        doc.height-24,
+        doc.height-(title_font_size*1.4),
         id='column1'
         )
     frame2 = Frame(
         doc.leftMargin + doc.width/2+5,
         doc.bottomMargin,
         doc.width/2-5,
-        doc.height-24,
+        doc.height-(title_font_size*1.4),
         id='column2'
         )
 
@@ -217,7 +255,7 @@ def create_toc(
 
     toc_title = Paragraph(
         f"<b><i>{ensemble_name}: {book_name} book</i></b>",
-        style_title
+        style_toc_title
         )
 
     elements = [toc]
