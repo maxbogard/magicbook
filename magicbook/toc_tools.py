@@ -21,6 +21,9 @@ from reportlab.lib.styles import (
     ParagraphStyle,
     getSampleStyleSheet
 )
+from reportlab.lib.pagesizes import (
+    letter
+)
 from library_tools import (
     Chart,
     # Song
@@ -29,6 +32,13 @@ from functools import partial
 from constants import (
     LYRE_PAPER_X,
     LYRE_PAPER_Y,
+    LYRE_MARGIN_X,
+    LYRE_MARGIN_TOP,
+    LYRE_MARGIN_BOTTOM,
+    LETTER_MARGIN_X,
+    LETTER_MARGIN_Y,
+    MARCHPACK_FORMATS,
+    BINDER_FORMATS,
 )
 
 
@@ -43,6 +53,13 @@ def compile_toc_data(
     table in the format of CHART NAME, PART NAME, PAGE NUMBER,
     (list of songs, if the chart isn't a single)
     '''
+
+    if b_parts is not None:
+        for part in a_parts:
+            part.page_id = f'A{part.page_id}'
+
+        for part in b_parts:
+            part.page_id = f'B{part.page_id}'
 
     charts.sort(key=lambda x: x.slug)
     all_parts = a_parts + b_parts
@@ -65,18 +82,38 @@ def compile_toc_data(
     return toc_data
 
 
-def create_toc(ensemble_name: str, book_name: str, output_loc, toc_data):
+def create_toc(ensemble_name: str, book_name: str, format: str, output_loc, toc_data):
     '''
     Given the table of contents data, generates a table of contents
     '''
+
+    if format in MARCHPACK_FORMATS:
+        # page_format = "LYRE"
+        page_size = (LYRE_PAPER_X, LYRE_PAPER_Y)
+        margin_x = LYRE_MARGIN_X
+        margin_top = LYRE_MARGIN_TOP
+        margin_bottom = LYRE_MARGIN_BOTTOM
+        font_size = 9
+        song_font_size = 8
+        column_widths = [145, 72, 20]
+    elif format in BINDER_FORMATS:
+        # page_format = "PORTRAIT"
+        page_size = letter
+        margin_x = LETTER_MARGIN_X
+        margin_top = LETTER_MARGIN_Y
+        margin_bottom = LETTER_MARGIN_Y
+        font_size = 12
+        song_font_size = 10
+        column_widths = [388, 166, 28]
+
     toc_path = f"{output_loc}/toc.pdf"
     doc = BaseDocTemplate(
         toc_path,
-        pagesize=(LYRE_PAPER_X, LYRE_PAPER_Y),
-        rightMargin=10,
-        leftMargin=10,
-        topMargin=6,
-        bottomMargin=10,
+        pagesize=page_size,
+        rightMargin=margin_x,
+        leftMargin=margin_x,
+        topMargin=margin_top,
+        bottomMargin=margin_bottom,
         title=f"Table of Contents - {book_name}"
         )
 
@@ -88,7 +125,8 @@ def create_toc(ensemble_name: str, book_name: str, output_loc, toc_data):
     style_part = ParagraphStyle(
         name='Part Cell',
         parent=style_cell,
-        fontSize=9
+        fontSize=font_size,
+        leading=font_size*1.2
 
     )
 
@@ -102,11 +140,11 @@ def create_toc(ensemble_name: str, book_name: str, output_loc, toc_data):
     style_song = ParagraphStyle(
         name="Song Entry",
         parent=style_cell,
-        fontSize=8,
-        leading=9.6,
-        leftIndent=10,
-        bulletFontSize=8,
-        bulletIndent=0
+        fontSize=song_font_size,
+        leading=song_font_size*1.2,
+        leftIndent=8,
+        bulletFontSize=song_font_size,
+        bulletIndent=4
         )
 
     toc_with_songs = [['CHART', 'PART', '##']]
@@ -145,7 +183,7 @@ def create_toc(ensemble_name: str, book_name: str, output_loc, toc_data):
 
     toc = Table(
         toc_with_songs,
-        colWidths=[145, 72, 20],
+        colWidths=column_widths,
         style=style,
         repeatRows=1
         )

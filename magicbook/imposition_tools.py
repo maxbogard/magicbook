@@ -119,7 +119,7 @@ def merge_parts(parts: list):
     return merged_parts, list_of_stamps
 
 
-def create_stamp(stamp: int,
+def create_stamp(stamp,
                  stamp_location: str,
                  paper_size: tuple,
                  stamp_font: str,
@@ -156,7 +156,8 @@ def impose_and_merge(
         blanks: int,
         output_name: str,
         format: str,
-        toc=None
+        toc=None,
+        prefix=None
         ):
     """
     merges the pdfs from a list of parts, and adds n blank pages to the end
@@ -514,6 +515,7 @@ def merge_marchpacks(
                 toc_data = compile_toc_data(charts, a_parts, b_parts)
                 toc_path = create_toc(ensemble_info['name'],
                                       instrument['name'],
+                                      book_format,
                                       assemble_path,
                                       toc_data)
 
@@ -524,11 +526,13 @@ def merge_marchpacks(
                                  0,
                                  f"{assemble_path}/A.pdf",
                                  book_format,
-                                 toc=toc_path)
+                                 toc=toc_path,
+                                 prefix='A')
                 impose_and_merge(b_parts,
                                  x_pages,
                                  f"{assemble_path}/B.pdf",
-                                 book_format)
+                                 book_format,
+                                 prefix='B')
                 impose_for_printing(
                     f"{assemble_path}/A.pdf",
                     f"{assemble_path}/B.pdf",
@@ -541,11 +545,13 @@ def merge_marchpacks(
                                  x_pages,
                                  f"{assemble_path}/A.pdf",
                                  book_format,
-                                 toc=toc_path)
+                                 toc=toc_path,
+                                 prefix='A')
                 impose_and_merge(b_parts,
                                  0,
                                  f"{assemble_path}/B.pdf",
-                                 book_format)
+                                 book_format,
+                                 prefix='B')
 
             if book_format in MARCHPACK_FORMATS:
                 impose_for_printing(
@@ -592,6 +598,7 @@ def merge_marchpacks(
                     toc_path = create_toc(
                         ensemble_info['name'],
                         f"{instrument['name']} {book['name']}",
+                        book_format,
                         assemble_path,
                         toc_data
                         )
@@ -603,12 +610,14 @@ def merge_marchpacks(
                                      0,
                                      f"{assemble_path}/A.pdf",
                                      book_format,
-                                     toc=toc_path
+                                     toc=toc_path,
+                                     prefix='A'
                                      )
                     impose_and_merge(b_parts,
                                      x_pages,
                                      f"{assemble_path}/B.pdf",
                                      book_format,
+                                     prefix='B'
                                      )
                 else:
                     x_pages = b_pages - a_pages
@@ -617,12 +626,14 @@ def merge_marchpacks(
                                      x_pages,
                                      f"{assemble_path}/A.pdf",
                                      book_format,
-                                     toc=toc_path
+                                     toc=toc_path,
+                                     prefix='A'
                                      )
                     impose_and_merge(b_parts,
                                      0,
                                      f"{assemble_path}/B.pdf",
-                                     book_format
+                                     book_format,
+                                     prefix='B'
                                      )
                 pdfname = f'{instrument['slug']}{book['name']}.pdf'
 
