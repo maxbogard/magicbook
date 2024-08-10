@@ -48,7 +48,7 @@ def strip_part_filename(file, chart_name):
     """
     returns only the name of the part (no chart name or .pdf)
     """
-    part_core = file.removeprefix(chart_name).removesuffix(".pdf")
+    part_core = str(file).removeprefix(chart_name).removesuffix(".pdf")
     for format in PAGE_FORMATS:
         if format in part_core:
             return part_core.removeprefix(

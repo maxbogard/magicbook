@@ -428,8 +428,8 @@ def pdf_path_list(path: str, index: dict, format: str, prefix=None) -> list:
             print(f"part in prefer_find: {part}")
 
             part_slug = strip_part_filename(
-                part,
-                index[chart_id].slug
+                str(part),
+                str(index[chart_id].slug)
             )
             part_obj = Part(
                 index[chart_id],
@@ -442,8 +442,8 @@ def pdf_path_list(path: str, index: dict, format: str, prefix=None) -> list:
             pdf_pages += part_obj.pagect
         for part in other_find:
             part_slug = strip_part_filename(
-                part,
-                index[chart_id].slug
+                str(part),
+                str(index[chart_id].slug)
             )
             print(f"found non-preferred format {part_slug}")
             if any(part_slug in s for s in prefer_find) is False:
@@ -497,13 +497,11 @@ def merge_marchpacks(
                 path,
                 a_index,
                 book_format,
-                prefix='A'
                 )
             b_parts, b_pages = pdf_path_list(
                 path,
                 b_index,
                 book_format,
-                prefix='B'
                 )
 
             assemble_path = f"{source_dir}/temp/{instrument['slug']}"

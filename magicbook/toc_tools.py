@@ -82,7 +82,13 @@ def compile_toc_data(
     return toc_data
 
 
-def create_toc(ensemble_name: str, book_name: str, format: str, output_loc, toc_data):
+def create_toc(
+        ensemble_name: str,
+        book_name: str,
+        format: str,
+        output_loc,
+        toc_data
+        ):
     '''
     Given the table of contents data, generates a table of contents
     '''
