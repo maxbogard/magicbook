@@ -58,16 +58,21 @@ As of this writing, **magicbook** performs the following tasks:
   based on their instrument rather than based on their assocated chart
 - Merging these directories of different parts into an A.pdf and B.pdf to be
   printed and placed in marchpacks
+- Merging an instrument's charts into one single PDF for printing, either as a
+  marchpack (7in x 5in pages that attach to an instrument), or as a full-sized
+  binder with 8.5in x 11in pages.
+  - For marchpacks, imposing the marchpack pages onto 8.5" x 11" paper (2
+    marchpack pages per printing pages), so after printing they can be easily
+    cut with a paper cutter and placed into a standard double-sided marchpack
+- Searching for alternate parts if a chart doesn't have a part for a specified
+  instrument.
+  - i.e. if there is no Trombone part, add a Baritone part if one is available.
+    If that's not an option, add a Tuba part.
+- Printing a table of contents for each book, listing charts in alphabetical
+  order.
 
 ### Planned Features
 
-- Impose PDFs onto 8.5" x 11" paper, so after printing they can be easily cut
-  with a paper cutter and placed into a standard double-sided marchpack
-- Update instrument and/or ensemble json files to specify substitutions for
-  missing parts, in order of priority.
-  - i.e. if there is no Trombone part, add a Baritone part if one is available.
-    If that's not an option, add a Tuba part.
-- Print a table of contents for each book, listing charts in alphabetical order.
 - Update the chart "info.json" file
 - This is not a complete list of planned features, will add more to this section
   as I organize my thoughts.
