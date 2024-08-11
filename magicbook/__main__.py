@@ -162,8 +162,8 @@ def main():
                             max_id,
                             book_format='MarchpackComprehensive'
                             )
-                        going_home()
-                        break
+                        print('MarchpackComprehensive books printed!')
+                        print('Print another format, or return to main menu')
                     elif book_formats[format_entry_index] == 'BinderOnePartPg':
                         merge_marchpacks(
                             selected_charts,
@@ -173,8 +173,8 @@ def main():
                             max_id,
                             book_format='BinderOnePartPg'
                             )
-                        going_home()
-                        break
+                        print('MarchpackComprehensive books printed!')
+                        print('Print another format, or return to main menu')
                     elif book_formats[
                             format_entry_index
                             ] == 'BinderOneChartPg':

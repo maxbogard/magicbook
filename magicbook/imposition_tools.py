@@ -509,7 +509,9 @@ def merge_marchpacks(
                 book_format,
                 )
 
-            assemble_path = f"{source_dir}/temp/{instrument['slug']}"
+            assemble_path = (
+                f"{source_dir}/temp_{book_format}/{instrument['slug']}"
+                )
 
             os.makedirs(assemble_path)
 
@@ -539,7 +541,8 @@ def merge_marchpacks(
                 impose_for_printing(
                     f"{assemble_path}/A.pdf",
                     f"{assemble_path}/B.pdf",
-                    f"{source_dir}/output/{instrument['slug']}.pdf"
+                    f"""{source_dir}/output_{book_format}/\
+                    {instrument['slug']}.pdf"""
                     )
             else:
                 x_pages = b_pages - a_pages
@@ -556,15 +559,19 @@ def merge_marchpacks(
                                  book_format,
                                  prefix='B')
 
+            pdfname = f'{instrument['slug']}.pdf'
+
             if book_format in MARCHPACK_FORMATS:
                 impose_for_printing(
                     f"{assemble_path}/A.pdf",
                     f"{assemble_path}/B.pdf",
-                    f"{source_dir}/output/{instrument['slug']}.pdf"
-                                    )
+                    f"{source_dir}/output_{book_format}/{pdfname}"
+                    )
             else:
-                if os.path.exists(f"{source_dir}/output/") is False:
-                    os.makedirs(f"{source_dir}/output/")
+                if os.path.exists(
+                        f"{source_dir}/output_{book_format}/"
+                        ) is False:
+                    os.makedirs(f"{source_dir}/output_{book_format}/")
                 merger = pypdf.PdfWriter()
 
                 for pdf in [
@@ -573,7 +580,9 @@ def merge_marchpacks(
                         ]:
                     merger.append(pdf)
 
-                merger.write(f"{source_dir}/output/{instrument['slug']}.pdf")
+                merger.write(
+                    f"{source_dir}/output_{book_format}/{pdfname}"
+                    )
                 merger.close()
 
         elif instrument['div'] < 1:
@@ -590,7 +599,7 @@ def merge_marchpacks(
                 a_parts, a_pages = pdf_path_list(path, a_index, book_format)
                 b_parts, b_pages = pdf_path_list(path, b_index, book_format)
 
-                assemble_path = f"""{source_dir}/temp/\
+                assemble_path = f"""{source_dir}/temp_{book_format}/\
                 {instrument['slug']}{book['name']}"""
 
                 os.makedirs(assemble_path)
@@ -644,11 +653,13 @@ def merge_marchpacks(
                     impose_for_printing(
                         f"{assemble_path}/A.pdf",
                         f"{assemble_path}/B.pdf",
-                        f"{source_dir}/output/{pdfname}"
+                        f"{source_dir}/output_{book_format}/{pdfname}"
                         )
                 else:
-                    if os.path.exists(f"{source_dir}/output/") is False:
-                        os.makedirs(f"{source_dir}/output/")
+                    if os.path.exists(
+                            f"{source_dir}/output_{book_format}/"
+                            ) is False:
+                        os.makedirs(f"{source_dir}/output_{book_format}/")
                     merger = pypdf.PdfWriter()
 
                     for pdf in [
@@ -657,5 +668,7 @@ def merge_marchpacks(
                             ]:
                         merger.append(pdf)
 
-                    merger.write(f"{source_dir}/output/{pdfname}")
+                    merger.write(
+                        f"{source_dir}/output_{book_format}/{pdfname}"
+                        )
                     merger.close()

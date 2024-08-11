@@ -5,110 +5,92 @@
     {
       "slug": "flute",
       "name": "Flute",
-      "div": 1,
-      "key": "concert"
+      "div": 1
     },
     {
       "slug": "clarinet",
       "name": "Clarinet",
-      "div": 2,
-      "key": "Bb"
+      "div": 2
     },
     {
       "slug": "altosax",
       "name": "Alto Sax",
-      "div": 1,
-      "key": "Eb"
+      "div": 1
     },
     {
       "slug": "tenorsax",
       "name": "Tenor Sax",
-      "div": 1,
-      "key": "Bb"
+      "div": 1
     },
     {
       "slug": "barisax",
       "name": "Bari Sax",
-      "div": 1,
-      "key": "Eb"
+      "div": 1
     },
     {
       "slug": "trumpet",
       "name": "Trumpet",
-      "div": 3,
-      "key": "Bb"
+      "div": 3
     },
     {
       "slug": "hornf",
       "name": "F Horn",
-      "div": 1,
-      "key": "F"
+      "div": 1
     },
     {
       "slug": "trombone",
       "name": "Trombone",
-      "div": 2,
-      "key": "bc"
+      "div": 2
     },
     {
       "slug": "baritonebc",
       "name": "Baritone BC",
-      "div": 1,
-      "key": "bc"
+      "div": 1
     },
     {
       "slug": "baritonetc",
       "name": "Baritone TC",
-      "div": 1,
-      "key": "Bb"
+      "div": 1
     },
     {
       "slug": "tuba",
       "name": "Tuba",
-      "div": 1,
-      "key": "bc"
+      "div": 1
     },
     {
       "slug": "keyboards",
       "name": "Keyboards",
-      "div": 1,
-      "key": "concert"
+      "div": 1
     },
     {
       "slug": "bassguitar",
       "name": "Bass Guitar",
-      "div": 1,
-      "key": "bc"
+      "div": 1
     },
     {
       "slug": "drumset",
       "name": "Drum Set",
-      "div": 1,
-      "key": "perc"
+      "div": 1
     },
     {
       "slug": "snaredrum",
       "name": "Snare Drum",
-      "div": 1,
-      "key": "perc"
+      "div": 1
     },
     {
       "slug": "multitoms",
       "name": "Multi Toms",
-      "div": 1,
-      "key": "perc"
+      "div": 1
     },
     {
       "slug": "bassdrum",
       "name": "Bass Drum",
-      "div": 1,
-      "key": "perc"
+      "div": 1
     },
     {
       "slug": "cymbals",
       "name": "Cymbals",
-      "div": 1,
-      "key": "perc"
+      "div": 1
     }
   ]
 }

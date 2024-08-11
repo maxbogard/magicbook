@@ -15,7 +15,7 @@ from reportlab.platypus import (
 from reportlab.lib import colors
 from reportlab.lib.enums import (
     TA_LEFT,
-    TA_RIGHT,
+    # TA_RIGHT,
 )
 from reportlab.lib.styles import (
     ParagraphStyle,
@@ -100,9 +100,9 @@ def create_toc(
         margin_top = LYRE_MARGIN_TOP
         margin_bottom = LYRE_MARGIN_BOTTOM
         font_size = 9
-        song_font_size = 8
-        title_font_size = 18
-        column_widths = [145, 72, 20]
+        song_font_size = 7
+        title_font_size = 14
+        column_widths = [20, 145, 72]
     elif format in BINDER_FORMATS:
         # page_format = "PORTRAIT"
         page_size = letter
@@ -112,7 +112,7 @@ def create_toc(
         font_size = 12
         song_font_size = 10
         title_font_size = 24
-        column_widths = [160, 80, 24]
+        column_widths = [26, 160, 78]
 
     toc_path = f"{output_loc}/toc.pdf"
     doc = BaseDocTemplate(
@@ -159,12 +159,11 @@ def create_toc(
 
     )
 
-    style_right = ParagraphStyle(
-        name='Right Cell',
-        parent=style_cell
+    style_id = ParagraphStyle(
+        name='ID Cell',
+        fontSize=font_size,
+        leading=font_size*1.2
     )
-
-    style_right.alignment = TA_RIGHT
 
     style_song = ParagraphStyle(
         name="Song Entry",
@@ -179,15 +178,15 @@ def create_toc(
     toc_with_songs = [
         [
             Paragraph(
+                '##',
+                style_toc_h
+                ),
+            Paragraph(
                 'CHART',
                 style_toc_h
                 ),
             Paragraph(
                 'PART',
-                style_toc_h
-                ),
-            Paragraph(
-                '##',
                 style_toc_h
                 )
             ]
@@ -208,9 +207,9 @@ def create_toc(
         row_counter += 1
         # height_rows.append(16)
         toc_with_songs.append(
-            [Paragraph(entry[0], style_chart),
-             Paragraph(entry[1], style_part),
-             entry[2]])
+            [Paragraph(entry[2], style_id),
+             Paragraph(entry[0], style_chart),
+             Paragraph(entry[1], style_part)])
         if entry[3] != []:
             for song in entry[3]:
                 row_counter += 1
