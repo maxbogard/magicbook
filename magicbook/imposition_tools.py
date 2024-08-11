@@ -37,13 +37,22 @@ def count_pdf_pages(pdf_path: str) -> int:
 
 
 class Part(Chart):
-    def __init__(self, chart: Chart, part_title, page_id, part_path, format):
+    def __init__(
+            self,
+            chart: Chart,
+            part_title,
+            page_id,
+            part_path,
+            format,
+            prefix=None
+            ):
         super().__init__(chart.slug, chart.is_single, chart.sl, chart.title)
         self.part_title = part_title
         self.page_id = page_id
         self.part_path = part_path
         self.format = format
         self.pagect = count_pdf_pages(part_path)
+        self.prefix = prefix
 
 
 def get_book_paths(ensemble_info: dict, source_dir: str) -> list:
@@ -119,11 +128,14 @@ def merge_parts(parts: list):
     return merged_parts, list_of_stamps
 
 
-def create_stamp(stamp,
-                 stamp_location: str,
-                 paper_size: tuple,
-                 stamp_font: str,
-                 stamp_size: int):
+def create_stamp(
+        stamp,
+        stamp_location: str,
+        paper_size: tuple,
+        stamp_font: str,
+        stamp_size: int,
+        prefix: str
+        ):
     """
     Given the paper size, stamp location and a list of stamps,
     creates a series of stamps that can be merged onto a
@@ -137,6 +149,11 @@ def create_stamp(stamp,
     if stamp_location == 'bottom_right':
         can.drawRightString(
             (paper_size[0] - 5),
+            (stamp_size + 5),
+            prefix
+        )
+        can.drawRightString(
+            (paper_size[0] - 5),
             5,
             stamp
             )
@@ -144,7 +161,7 @@ def create_stamp(stamp,
         can.drawRightString(
             (paper_size[0] - 10),
             (paper_size[1] - (stamp_size + 5)),
-            stamp
+            f"{prefix}{stamp}"
             )
     can.save()
 
@@ -212,7 +229,8 @@ def impose_and_merge(
                               stamp_location,
                               (paper_x, paper_y),
                               "Helvetica-Bold",
-                              stamp_size)
+                              stamp_size,
+                              prefix)
 
         page = reader.get_page(n)
 
@@ -334,7 +352,8 @@ def select_chart_order(
         for n in range(0, (marchpack_pages)):
             chart = library_tools.lib_single_query(
                 charts_rem,
-                pageid=f"A{a_id}"
+                pageid=f"{a_id}",
+                prefix='A'
                 )
             charts_rem.remove(chart)
             a_index[a_id] = chart
@@ -345,7 +364,8 @@ def select_chart_order(
         for n in range(0, (marchpack_pages + marchpack_rem)):
             chart = library_tools.lib_single_query(
                 charts_rem,
-                pageid=f"B{b_id}"
+                pageid=f"{b_id}",
+                prefix='B'
                 )
             charts_rem.remove(chart)
             b_index[b_id] = chart
@@ -439,9 +459,10 @@ def pdf_path_list(path: str, index: dict, format: str, prefix=None) -> list:
             part_obj = Part(
                 index[chart_id],
                 part_slug,
-                f'{pre}{chart_id}',
+                f'{chart_id}',
                 os.path.join(path, part),
-                preferred_format
+                preferred_format,
+                prefix=str(pre)
             )
             pdf_list.append(part_obj)
             pdf_pages += part_obj.pagect
@@ -455,9 +476,10 @@ def pdf_path_list(path: str, index: dict, format: str, prefix=None) -> list:
                 part_obj = Part(
                     index[chart_id],
                     part_slug,
-                    f'{pre}{chart_id}',
+                    f'{chart_id}',
                     os.path.join(path, part),
-                    other_format
+                    other_format,
+                    str(pre)
                     )
                 pdf_list.append(part_obj)
                 pdf_pages += part_obj.pagect
@@ -502,11 +524,13 @@ def merge_marchpacks(
                 path,
                 a_index,
                 book_format,
+                prefix='A'
                 )
             b_parts, b_pages = pdf_path_list(
                 path,
                 b_index,
                 book_format,
+                prefix='B'
                 )
 
             assemble_path = (
@@ -596,8 +620,17 @@ def merge_marchpacks(
                                     book['name'])
                 print(f"merging{instrument['name']} {book['name']}:")
 
-                a_parts, a_pages = pdf_path_list(path, a_index, book_format)
-                b_parts, b_pages = pdf_path_list(path, b_index, book_format)
+                a_parts, a_pages = pdf_path_list(
+                    path,
+                    a_index,
+                    book_format,
+                    prefix='A'
+                    )
+                b_parts, b_pages = pdf_path_list(
+                    path,
+                    b_index,
+                    book_format,
+                    prefix='B')
 
                 assemble_path = f"""{source_dir}/temp_{book_format}/\
                 {instrument['slug']}{book['name']}"""

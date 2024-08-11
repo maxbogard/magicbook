@@ -54,12 +54,12 @@ def compile_toc_data(
     (list of songs, if the chart isn't a single)
     '''
 
-    if b_parts is not None:
-        for part in a_parts:
-            part.page_id = f'A{part.page_id}'
+    # if b_parts is not None:
+    #     for part in a_parts:
+    #         part.page_id = f'A{part.page_id}'
 
-        for part in b_parts:
-            part.page_id = f'B{part.page_id}'
+    #     for part in b_parts:
+    #         part.page_id = f'B{part.page_id}'
 
     charts.sort(key=lambda x: x.slug)
     all_parts = a_parts + b_parts
@@ -75,7 +75,7 @@ def compile_toc_data(
                         songs_entry.append(song.title)
                 toc_data.append(
                     [chart.title, part.part_title,
-                     part.page_id,
+                     f"{part.prefix}{part.page_id}",
                      songs_entry]
                      )
 
