@@ -10,6 +10,7 @@ from library_tools import lib_query
 from book_tools import assemble_books
 # from book_tools import Instrument
 from imposition_tools import merge_marchpacks
+from simple_io_tools import assemble_book_questions
 
 from constants import SPLITSORT, MARCHPACK_FORMATS, BINDER_FORMATS
 
@@ -133,11 +134,12 @@ def main():
         if options[menu_entry_index] == "Exit":
             quit()
         elif options[menu_entry_index] == "Assemble Books":
-            print(
-                f"Assembling marchpacks for the {ensemble_info['name']}."
-                )
-            selected_charts, issue_dir, max_id = assemble_books(
-                lib,
+            selected_charts, abside, max_id = assemble_book_questions(
+                ensemble_info,
+                lib
+            )
+            issue_dir = assemble_books(
+                selected_charts,
                 library_path,
                 output_dir,
                 ensemble_instruments,

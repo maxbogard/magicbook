@@ -57,7 +57,7 @@ def strip_part_filename(file, chart_name):
     return part_core
 
 
-def lib_query(lib):
+def lib_query(lib) -> list[Chart]:
     """
     Prompts the user to select one or more charts
 

@@ -1,9 +1,8 @@
 import os
 import shutil
 import datetime
-import survey
 
-from library_tools import lib_query, strip_part_filename
+from library_tools import strip_part_filename
 
 
 class Instrument:
@@ -149,14 +148,7 @@ def grab_parts(instruments,
                 lib_dir,
                 issue_dir
                 )
-            # divdict = {}
-            # for chart in charts:
-            #     for root, dirs, files in os.walk(inspath):
-            #         divct = 0
-            #         for file in files:
-            #             if chart.slug in file:
-            #                 divct += 1
-            #         divdict[chart] = divct
+
             for book in SPLITSORT[instrument['div']]:
                 bpath = os.path.join(issue_dir,
                                      instrument["slug"],
@@ -218,45 +210,18 @@ def grab_parts(instruments,
 
 
 def assemble_books(
-        lib,
-        lib_dir,
-        output_dir,
-        instruments,
-        ensemble_dir,
-        SPLITSORT
-        ):
+        selected_charts: list,
+        lib_dir: str,
+        output_dir: str,
+        instruments: list,
+        ensemble_dir: str,
+        SPLITSORT: dict,
+        ) -> str:
     """
     Create books to hand out to ensemble members
     with charts for their instrument
     """
     issue_dir = prepare_folder(output_dir, ensemble_dir)
-    print("What charts are going in this book?")
-    selected_charts = lib_query(lib)
-    qty = len(selected_charts)
-    lowest_max_id = ((qty // 2) + (qty % 2))
-    print(f"This marchpack has {qty} charts.")
-    print(
-        "What number would you like to assign to the last chart of the B side?"
-        )
-    print(
-        f"""::The minimum number is {lowest_max_id}, \
-            and it is recommended to choose a larger number"""
-        )
-    print(
-        """so you have flexibility to add charts in the future. \
-            Max. number is 99."""
-        )
-    while True:
-        max_id = survey.routines.numeric("Last B ID:", decimal=False)
-        if max_id < lowest_max_id:
-            print(
-                f"""Please choose a number equal to \
-                    or greater than {lowest_max_id}."""
-                    )
-        elif max_id > 99:
-            print("Please choose a number less than 100.")
-        else:
-            break
 
     # parts_in_book = list_parts(selected_charts, lib_dir)
     grab_parts(
@@ -266,4 +231,4 @@ def assemble_books(
         lib_dir,
         SPLITSORT
         )
-    return selected_charts, issue_dir, max_id
+    return issue_dir
