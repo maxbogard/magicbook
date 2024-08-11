@@ -266,11 +266,17 @@ def impose_and_merge(
         page_new = new_pdf.get_page(0)
         page.mediabox = page_new.mediabox
 
+        # moves content as close to centered on the page x axis as possible
+        # without overlapping the right margin area.
+        trans_x = ((paper_x - (w * scale_factor)) / 2)
+        if trans_x + (w * scale_factor) > content_x:
+            trans_x = ((content_x - (w * scale_factor)) / 2)
+
         # merges the page onto the stamp
         page_new.merge_transformed_page(
             page,
             pypdf.Transformation().translate(
-                tx=0,
+                tx=trans_x,
                 ty=((content_y - (h * scale_factor)) / 2),
             ),
             False
