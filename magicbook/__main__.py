@@ -6,7 +6,6 @@ from prompt_toolkit import print_formatted_text as print
 from prompt_toolkit import HTML
 
 from library_tools import audit_library
-from library_tools import lib_query
 from book_tools import assemble_books
 # from book_tools import Instrument
 from imposition_tools import merge_marchpacks
@@ -88,7 +87,6 @@ def main():
         )
 
     options = [
-        "Query Charts",
         "Assemble Books",
         "Impose Created Books",
         "Exit"
@@ -218,9 +216,6 @@ def main():
         #             break
 
             merge_marchpacks(selected_charts, True, issue_dir, ensemble_info)
-            going_home()
-        elif options[menu_entry_index] == "Query Charts":
-            lib_query(lib)
             going_home()
 
 

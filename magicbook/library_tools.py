@@ -44,7 +44,10 @@ class Chart:
         return os.path.join(libdir, self.slug)
 
 
-def strip_part_filename(file, chart_name):
+def strip_part_filename(
+        file,
+        chart_name
+        ) -> str:
     """
     returns only the name of the part (no chart name or .pdf)
     """
@@ -57,32 +60,35 @@ def strip_part_filename(file, chart_name):
     return part_core
 
 
-def lib_query(lib) -> list[Chart]:
-    """
-    Prompts the user to select one or more charts
+# this function is user i/o, has been replaced by a new function
+# in simple_io_tools.py
 
-    Returns:
-        a list of charts, in object form
-    """
-    while True:
-        choices = []
-        for cha in lib:
-            print(cha)
-            print(cha.title)
-            choices.append(cha.title)
-        print(choices)
-        selection = survey.routines.basket('SELECT CHARTS:', options=choices)
-        print("\n")
-        selected = []
-        for c in selection:
-            # selected.append(choices[c])
-            selected.append(lib[c])
-        print("You have selected the following charts:")
-        for s in selected:
-            print(f" - {s.title}")
-        if survey.routines.inquire("Is this correct?", default=True) is True:
-            break
-    return selected
+# def lib_query(lib) -> list[Chart]:
+#     """
+#     Prompts the user to select one or more charts
+
+#     Returns:
+#         a list of charts, in object form
+#     """
+#     while True:
+#         choices = []
+#         for cha in lib:
+#             print(cha)
+#             print(cha.title)
+#             choices.append(cha.title)
+#         print(choices)
+#         selection = survey.routines.basket('SELECT CHARTS:', options=choices)
+#         print("\n")
+#         selected = []
+#         for c in selection:
+#             # selected.append(choices[c])
+#             selected.append(lib[c])
+#         print("You have selected the following charts:")
+#         for s in selected:
+#             print(f" - {s.title}")
+#         if survey.routines.inquire("Is this correct?", default=True) is True:
+#             break
+#     return selected
 
 
 def lib_single_query(loc, pageid="", prefix=None):

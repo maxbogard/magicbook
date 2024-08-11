@@ -53,7 +53,6 @@ As of this writing, **magicbook** performs the following tasks:
 
 - Auditing the library on startup
   - ensures every chart has a valid info.json file
-- Selecting a subset of the charts to perform actions on
 - Assembling books from a selection of charts, where parts are in directories
   based on their instrument rather than based on their assocated chart
 - Merging these directories of different parts into an A.pdf and B.pdf to be

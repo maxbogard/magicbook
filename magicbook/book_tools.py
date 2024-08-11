@@ -41,7 +41,20 @@ def list_parts(chart, lib_dir):
     return output_list
 
 
-def parts_grabber(parts, ins_slug, out_slug, input, output):
+def parts_grabber(
+        parts: list,
+        ins_slug: str,
+        out_slug: str,
+        input: str,
+        output: str,
+        ) -> int:
+    """
+    Given an instrument and a list of parts, copies parts for that instrument
+    to a specified output directory, and returns the number of UNIQUE parts
+    found. Calls the strip_part_filename function to remove formatting data
+    from the part name (i.e. "PORTRAIT", "LANDSCAPE"), so it can see whether a
+    part is unique, or is a different format of an already found part.
+    """
     n = 0
     p_slugs_found = []
     for c_slug, p_slug, fil in parts:
@@ -66,7 +79,38 @@ def parts_grabber(parts, ins_slug, out_slug, input, output):
     return n
 
 
-def grab_instrument_parts(instrument, charts, input, output):
+def grab_instrument_parts(
+        instrument: dict,
+        charts: list,
+        input: str,
+        output: str,
+        ) -> dict:
+    """
+    For a given instrument, iterates through a list of charts:
+     - for each chart, searches for relevant parts for the instrument
+     - if part(s) written specifically for the instrument are found,
+       it copies those parts to the instrument's directory in the
+       specified output directory.
+     - if no parts written specifically for the instrument are found,
+       iterates through the instrument's list of alternate instruments.
+       - if it finds parts for the alternate, it copies them to the folder
+         and stops iterating through the list.
+       - if it doesn't find parts for the alternate, moves on to the next
+         alternate in the list
+     - counts the number of parts found for the instrument (0 if no parts
+       were found for the instrument or any of its alternates)
+
+    Args:
+        instrument (dict): a list of instrument dictionaires containing info
+        about the instrument
+        charts (list): a list of Chart objects (see object for details)
+        input (str): the directory where the library is stored
+        output (str): the directory where the parts will be copied
+
+    Returns:
+        inst_charts_info: a dictionary with chart slugs as keys and the number
+        of parts found for that chart as values.
+    """
     inst_charts_info = {}
     for chart in charts:
         n = parts_grabber(
@@ -76,27 +120,7 @@ def grab_instrument_parts(instrument, charts, input, output):
             input,
             output
             )
-        # n = 0
-        # parts = list_parts(chart, input)
-        # p_slugs_found = []
-        # for c_slug, p_slug, fil in parts:
-        #     if f" {instrument['slug']}" in p_slug:
-        #         # space character filters out an instrument[slug] that is
-        #         # potentially a substring of another instrument[slug]
-        #         with open(os.path.join(input, c_slug, fil), 'rb') as source:
-        #             with open(os.path.join(output,
-        #                                    instrument['slug'],
-        #                                    (c_slug + p_slug)
-        #                                    ), 'wb') as dest:
-        #                 shutil.copyfileobj(source, dest)
-        #                 p_slug_short = strip_part_filename(p_slug, c_slug)
-        #                 print(f" - added {c_slug} {p_slug_short}")
 
-        #         # this should stop portrait and landscape parts from
-        #         # being counted as separate parts
-        #         if p_slug_short not in p_slugs_found:
-        #             n += 1
-        #         p_slugs_found.append(p_slug_short)
         if n < 1:
             alternates = instrument['alternates']
             r = 0
@@ -122,17 +146,46 @@ def grab_instrument_parts(instrument, charts, input, output):
     return inst_charts_info
 
 
-def grab_parts(instruments,
-               charts,
-               issue_dir,
-               lib_dir,
-               SPLITSORT,):
+def grab_parts(
+        instruments: list[dict],
+        charts: list,
+        issue_dir: str,
+        lib_dir: str,
+        SPLITSORT: dict,
+        ):
+    """
+    Iterates a list of instruments. For each instrument:
+     - calls a function to grab the relevant part(s) from the library
+       for each selected chart
+     - looks at instrument 'div' value to determine if one or multiple
+       books should be created for each instrument.
+     - If multiple books should be created for each instrument:
+       - reads SPLITSORT (a dictonary of lists of dictionaries) to determine
+         how to split parts when the number of available parts does not equal
+         the number of books for the instrument.
+       - copies the relevant parts into the appropriate book folders.
+       - removes parts from the base instrument folder.
+     - creates a "MISSING_PARTS.txt" file in the base instrument folder
+       - if no relevant parts (either written for that instrument or an
+         alternate part for another instrument) are found, writes the chart
+         title to the text file.
+
+    NOTE
+     - this function is a bit of a mess and could use some refactoring.
+       - (thank you copilot for suggesting this =P)
+     - this function does NOT return any values in Python as of this writing.
+       It copies PDFs to a directory specified in the input. The internal
+       directory structure is assumed. Any function that operates on the output
+       of this function needs to be aware of the internal directory structure.
+    """
     for instrument in instruments:
         inspath = os.path.join(issue_dir, instrument['slug'])
         os.makedirs(inspath)
+
+        print(f"Generating {instrument['name']} folder(s)!")
+        print("===================")
+
         if instrument['div'] == 1:
-            print(f"Generating {instrument['name']} folder!")
-            print("===================")
             divdict = grab_instrument_parts(
                 instrument,
                 charts,
@@ -140,8 +193,6 @@ def grab_parts(instruments,
                 issue_dir
                 )
         else:
-            print(f"Generating {instrument["name"]} folders!")
-            print("========================")
             divdict = grab_instrument_parts(
                 instrument,
                 charts,
