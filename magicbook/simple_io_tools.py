@@ -10,10 +10,35 @@ def chart_names_list(charts_list: list[Chart]):
     return chart_names
 
 
+def lib_single_query(loc, pageid="", prefix=None):
+    """
+    prompts the user to select a single chart from a list of charts
+    optional input to specify the page ID
+    """
+    if prefix is None:
+        pre = ""
+    else:
+        pre = f"{prefix}"
+
+    print(f"SELECT CHART: {pre}{pageid}")
+
+    charts_select_menu = TerminalMenu(
+        chart_names_list(loc),
+        multi_select=False,
+    )
+    selected_index = charts_select_menu.show()
+    selected_chart = loc[selected_index]
+
+    return selected_chart
+
+
 def assemble_book_questions(
         ensemble_info: dict,
         charts_list: list[Chart]
-        ) -> tuple[list[Chart], bool, int]:
+        ) -> tuple[
+            list[list[Chart]],
+            tuple[bool, int, bool]
+            ]:
     """
     """
     ens_name = ensemble_info['name']
@@ -70,4 +95,71 @@ def assemble_book_questions(
         abside = False
         max_id = -1
 
-    return selected_charts_list, abside, max_id
+    print(
+        'How would you like the charts to be ordered?\n'
+        ' - [A]lphabetical order\n'
+        ' - [C]ustom order\n'
+    )
+    if input("A/C: ") == 'C':
+        custom_order = True
+        if abside is True:
+            charts_rem = selected_charts_list.copy()
+            if abside is True:
+                book_pages = (len(charts_rem) // 2)
+                book_rem = (len(charts_rem) % 2)
+                print(
+                    "Select charts for 'A' side, in order from first to last"
+                )
+                a_index = {}
+                a_id = 1
+                for i in range(0, book_pages):
+                    chart = lib_single_query(
+                        charts_rem,
+                        pageid=f"{a_id}",
+                        prefix='A'
+                        )
+                    charts_rem.remove(chart)
+                    a_index[a_id] = chart
+                    a_id += 1
+                print(
+                    "Select charts for 'B' side, in order from first to last"
+                )
+                b_index = {}
+                b_id = ((max_id - book_pages) + 1)
+                for i in range(0, book_pages + book_rem):
+                    chart = lib_single_query(
+                        charts_rem,
+                        pageid=f"{b_id}",
+                        prefix='B'
+                        )
+                    charts_rem.remove(chart)
+                    b_index[b_id] = chart
+                    b_id += 1
+
+                sorted_charts = [a_index, b_index]
+
+            else:
+                book_pages = len(charts_rem)
+                print(
+                    "Select charts in order from first to last"
+                )
+                x_index = {}
+                x_id = 1
+                for n in range(0, book_pages):
+                    chart = lib_single_query(
+                        charts_rem,
+                        pageid=f"{x_id}"
+                        )
+                    charts_rem.remove(chart)
+                    x_index[x_id] = chart
+                    x_id += 1
+
+                sorted_charts = [x_index]
+
+        else:
+            custom_order = False
+            sorted_charts = selected_charts_list
+
+        book_order_data = (abside, max_id, custom_order)
+
+    return sorted_charts, book_order_data

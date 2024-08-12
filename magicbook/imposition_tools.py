@@ -6,7 +6,8 @@ into a single pdf per part for printing.
 import os
 import pypdf
 import library_tools
-from library_tools import Chart, strip_part_filename
+import json
+from library_tools import Chart, strip_part_filename, create_chart_object
 from toc_tools import compile_toc_data, create_toc
 from io import BytesIO
 from reportlab.pdfgen import canvas
@@ -54,25 +55,26 @@ class Part(Chart):
         self.pagect = count_pdf_pages(part_path)
         self.prefix = prefix
 
+# likely deprecated function
 
-def get_book_paths(ensemble_info: dict, source_dir: str) -> list:
-    """
-    Returns a list of paths to the pdfs in the output folder
-    """
-    book_paths = []
-    for instrument in ensemble_info['instruments']:
-        if instrument['div'] == 1:
-            book_paths.append(os.path.join(source_dir, instrument['slug']))
-        elif instrument['div'] > 1:
-            book_paths.append(os.path.join(
-                source_dir,
-                f"{instrument['slug']}{instrument['div']}"
-                ))
-        else:
-            raise ValueError("""an instrument can't be divided into
-                             less than one part!
-                             check your ensemble json file!""")
-    return book_paths
+# def get_book_paths(ensemble_info: dict, source_dir: str) -> list:
+#     """
+#     Returns a list of paths to the pdfs in the output folder
+#     """
+#     book_paths = []
+#     for instrument in ensemble_info['instruments']:
+#         if instrument['div'] == 1:
+#             book_paths.append(os.path.join(source_dir, instrument['slug']))
+#         elif instrument['div'] > 1:
+#             book_paths.append(os.path.join(
+#                 source_dir,
+#                 f"{instrument['slug']}{instrument['div']}"
+#                 ))
+#         else:
+#             raise ValueError("""an instrument can't be divided into
+#                              less than one part!
+#                              check your ensemble json file!""")
+#     return book_paths
 
 
 def get_book_path(instrument, source_dir):
@@ -342,7 +344,8 @@ def impose_for_printing(path_to_a: str,
 def select_chart_order(
         charts: list[Chart],
         abside: bool,
-        maxid=None) -> list[dict]:
+        maxid=None
+        ) -> list[dict]:
     """
     Takes a list of charts and asks the user to select how they should be
     ordered in the book. Can either order A/B based on side of the marchpack,
@@ -494,10 +497,7 @@ def pdf_path_list(path: str, index: dict, format: str, prefix=None) -> list:
 
 def merge_marchpacks(
         charts: list,
-        custom_order: bool,
         source_dir: str,
-        ensemble_info: dict,
-        max_id: int,
         book_format: str
         ):
     """
@@ -505,25 +505,53 @@ def merge_marchpacks(
     with a specified order and page size.
     """
 
+    with open(os.path.join(source_dir, 'book_info.json')) as b:
+        book_info = json.load(b)
+
+    raw_dir = os.path.join(source_dir, book_info['files']['raw'])
+    imposed_dir = os.path.join(source_dir, book_info['files']['imposed'])
+
+    if imposed_dir is False:
+        os.makedirs(imposed_dir)
+
+    max_id = book_info['max_id']
+    # custom_order = book_info['custom_order']
+    abside = book_info['abside']
+
     # !!! function settings here
     # - eventually these should be passed through arguments
     add_toc = True
     # book_format = 'MarchpackComprehensive'
 
-    # !!!
+    c_list = []
 
-    if custom_order is True:
-        book_index = select_chart_order(charts, custom_order, maxid=max_id)
+    if abside is True:
+        a_index = {}
+        a_id = 1
+        for c in book_info['charts'][0]:
+            a_index[a_id] = create_chart_object(c)
+            a_id += 1
+        b_index = {}
+        b_id = ((max_id - len(a_index)) + 1)
+        for c in book_info['charts'][1]:
+            b_index[b_id] = create_chart_object(c)
+            b_id += 1
+        for c in a_index.values():
+            c_list.append(c)
+        for c in b_index.values():
+            c_list.append(c)
     else:
-        book_index = auto_order_charts(charts)
+        x_index = {}
+        x_id = 1
+        for c in book_info['charts'][0]:
+            x_index[x_id] = create_chart_object(c)
+            x_id += 1
+        for c in x_index.values():
+            c_list.append(c)
 
-    # temporary before refactoring
-    a_index = book_index[0]
-    b_index = book_index[1]
-
-    for instrument in ensemble_info['instruments']:
+    for instrument in book_info['instruments']:
         if instrument['div'] == 1:
-            path = os.path.join(source_dir, instrument['slug'])
+            path = os.path.join(raw_dir, instrument['slug'])
             print(f'merging {instrument["name"]} book')
 
             a_parts, a_pages = pdf_path_list(
@@ -540,15 +568,15 @@ def merge_marchpacks(
                 )
 
             assemble_path = (
-                f"{source_dir}/temp_{book_format}/{instrument['slug']}"
+                f"{imposed_dir}/{book_format}/{instrument['slug']}"
                 )
 
             os.makedirs(assemble_path)
 
             if add_toc is True:
                 a_pages += 1
-                toc_data = compile_toc_data(charts, a_parts, b_parts)
-                toc_path = create_toc(ensemble_info['name'],
+                toc_data = compile_toc_data(c_list, a_parts, b_parts)
+                toc_path = create_toc(book_info['ensemble'],
                                       instrument['name'],
                                       book_format,
                                       assemble_path,
@@ -571,7 +599,7 @@ def merge_marchpacks(
                 impose_for_printing(
                     f"{assemble_path}/A.pdf",
                     f"{assemble_path}/B.pdf",
-                    f"""{source_dir}/output_{book_format}/\
+                    f"""{imposed_dir}/{book_format}/
                     {instrument['slug']}.pdf"""
                     )
             else:
@@ -595,13 +623,13 @@ def merge_marchpacks(
                 impose_for_printing(
                     f"{assemble_path}/A.pdf",
                     f"{assemble_path}/B.pdf",
-                    f"{source_dir}/output_{book_format}/{pdfname}"
+                    f"{imposed_dir}/{book_format}/{pdfname}"
                     )
             else:
                 if os.path.exists(
-                        f"{source_dir}/output_{book_format}/"
+                        f"{imposed_dir}/{book_format}/"
                         ) is False:
-                    os.makedirs(f"{source_dir}/output_{book_format}/")
+                    os.makedirs(f"{imposed_dir}/{book_format}/")
                 merger = pypdf.PdfWriter()
 
                 for pdf in [
@@ -611,7 +639,7 @@ def merge_marchpacks(
                     merger.append(pdf)
 
                 merger.write(
-                    f"{source_dir}/output_{book_format}/{pdfname}"
+                    f"{imposed_dir}/{book_format}/{pdfname}"
                     )
                 merger.close()
 
@@ -621,7 +649,7 @@ def merge_marchpacks(
                             check your ensemble json file!""")
         else:
             for book in SPLITSORT[instrument['div']]:
-                path = os.path.join(source_dir,
+                path = os.path.join(raw_dir,
                                     instrument['slug'],
                                     book['name'])
                 print(f"merging{instrument['name']} {book['name']}:")
@@ -638,16 +666,19 @@ def merge_marchpacks(
                     book_format,
                     prefix='B')
 
-                assemble_path = f"""{source_dir}/temp_{book_format}/\
-                {instrument['slug']}{book['name']}"""
+                assemble_path = os.path.join(
+                    imposed_dir,
+                    book_format,
+                    f'{instrument['slug']}{book['name']}'
+                )
 
                 os.makedirs(assemble_path)
 
                 if add_toc is True:
                     a_pages += 1
-                    toc_data = compile_toc_data(charts, a_parts, b_parts)
+                    toc_data = compile_toc_data(c_list, a_parts, b_parts)
                     toc_path = create_toc(
-                        ensemble_info['name'],
+                        book_info['ensemble'],
                         f"{instrument['name']} {book['name']}",
                         book_format,
                         assemble_path,
@@ -692,13 +723,13 @@ def merge_marchpacks(
                     impose_for_printing(
                         f"{assemble_path}/A.pdf",
                         f"{assemble_path}/B.pdf",
-                        f"{source_dir}/output_{book_format}/{pdfname}"
+                        f"{imposed_dir}/{book_format}/{pdfname}"
                         )
                 else:
                     if os.path.exists(
-                            f"{source_dir}/output_{book_format}/"
+                            f"{imposed_dir}/{book_format}/"
                             ) is False:
-                        os.makedirs(f"{source_dir}/output_{book_format}/")
+                        os.makedirs(f"{imposed_dir}/{book_format}/")
                     merger = pypdf.PdfWriter()
 
                     for pdf in [
@@ -708,6 +739,6 @@ def merge_marchpacks(
                         merger.append(pdf)
 
                     merger.write(
-                        f"{source_dir}/output_{book_format}/{pdfname}"
+                        f"{imposed_dir}/{book_format}/{pdfname}"
                         )
                     merger.close()

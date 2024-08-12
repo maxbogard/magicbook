@@ -132,9 +132,8 @@ def main():
         if options[menu_entry_index] == "Exit":
             quit()
         elif options[menu_entry_index] == "Assemble Books":
-            selected_charts, abside, max_id = assemble_book_questions(
-                ensemble_info,
-                lib
+            selected_charts, book_order_data = (
+                assemble_book_questions(ensemble_info, lib)
             )
             issue_dir = assemble_books(
                 selected_charts,
@@ -142,6 +141,8 @@ def main():
                 output_dir,
                 ensemble_instruments,
                 ensemble_dir,
+                ensemble_info['name'],
+                book_order_data,
                 SPLITSORT
                 )
             if survey.routines.inquire("Impose PDFS?", default=True) is True:
@@ -156,10 +157,7 @@ def main():
                             ] == 'MarchpackComprehensive':
                         merge_marchpacks(
                             selected_charts,
-                            True,
                             issue_dir,
-                            ensemble_info,
-                            max_id,
                             book_format='MarchpackComprehensive'
                             )
                         print('MarchpackComprehensive books printed!')
@@ -167,10 +165,7 @@ def main():
                     elif book_formats[format_entry_index] == 'BinderOnePartPg':
                         merge_marchpacks(
                             selected_charts,
-                            True,
                             issue_dir,
-                            ensemble_info,
-                            max_id,
                             book_format='BinderOnePartPg'
                             )
                         print('MarchpackComprehensive books printed!')

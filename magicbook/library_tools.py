@@ -121,6 +121,17 @@ def show_chart_details(chart, lib):
     pass
 
 
+def create_chart_object(chartinfo: dict) -> Chart:
+    chart_objct = Chart(
+        chartinfo['slug'],
+        chartinfo['is_single'],
+        chartinfo['songs'],
+        t=chartinfo.get('title')
+    )
+
+    return chart_objct
+
+
 def audit_chart_json(chart: str, infopath: str, scmpath: str):
     """
     Validates a chart's info.json file against the schema

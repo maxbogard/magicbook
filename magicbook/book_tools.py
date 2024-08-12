@@ -1,18 +1,30 @@
 import os
 import shutil
 import datetime
+import json
 
 from library_tools import strip_part_filename
 
+# should instruments even bee a class? not sure what benefit is gained over
+# reading from a dictionary.
 
-class Instrument:
-    def __init__(self, slug, name, divs):
-        self.slug = slug
-        self.name = name
-        self.divs = divs
+# class Instrument:
+#     def __init__(self, slug, name, divs):
+#         self.slug = slug
+#         self.name = name
+#         self.divs = divs
 
 
-def prepare_folder(output_dir, ensemble_dir):
+def prepare_folder(
+        output_dir: str,
+        ensemble_dir: str
+        ) -> tuple[str, str, str]:
+    """
+    Creates a directory for the book charts (both raw copied PDFs and imposed
+    final output) to be stored, based on the base output directory defined in
+    the config file, the name of the ensemble, and the time the books were
+    issued.
+    """
     ensemble_loc = os.path.join(output_dir, ensemble_dir)
     is_existing = os.path.exists(ensemble_loc)
     if not is_existing:
@@ -21,6 +33,8 @@ def prepare_folder(output_dir, ensemble_dir):
     isnow = datetime.datetime.now()
     issued = isnow.strftime("%Y-%m-%d %H%M%S")
     issue_dir = os.path.join(ensemble_loc, issued)
+    raw_dir = "raw"
+    imposed_dir = "imposed"
 
     if os.path.exists(issue_dir) is True:
         raise Exception("The output folder already exists.\
@@ -28,10 +42,17 @@ def prepare_folder(output_dir, ensemble_dir):
 
     os.makedirs(issue_dir)
 
-    return issue_dir
+    return issue_dir, raw_dir, imposed_dir
 
 
-def list_parts(chart, lib_dir):
+def list_parts(
+        chart,
+        lib_dir: str,
+        ) -> list[tuple]:
+    """
+    Given a Chart, and the directory it is located in, returns a list of tuples
+    containing the chart slug, the part slug, and the filename of the part.
+    """
     output_list = []
     for root, dirs, files in os.walk(os.path.join(lib_dir, chart.slug)):
         for file in files:
@@ -266,20 +287,112 @@ def assemble_books(
         output_dir: str,
         instruments: list,
         ensemble_dir: str,
+        ensemble_name: str,
+        book_order_data: tuple[bool, int, bool],
         SPLITSORT: dict,
         ) -> str:
     """
     Create books to hand out to ensemble members
     with charts for their instrument
+
+    Returns:
+        issue_dir (str): the directory where the sorted charts are saved, based
+        on the ensemble name and the date and time the books were generated
     """
-    issue_dir = prepare_folder(output_dir, ensemble_dir)
+    abside = book_order_data[0]
+    max_id = book_order_data[1]
+    custom_order = book_order_data[2]
+
+    issue_dir, raw, imposed = prepare_folder(output_dir, ensemble_dir)
+
+    raw_dir = os.path.join(issue_dir, raw)
+
+    loc = []
+    for d in selected_charts:
+        for c in d.values():
+            loc.append(c)
 
     # parts_in_book = list_parts(selected_charts, lib_dir)
     grab_parts(
         instruments,
-        selected_charts,
-        issue_dir,
+        loc,
+        raw_dir,
         lib_dir,
         SPLITSORT
         )
+
+    if abside is True:
+        a_list = []
+        for chart in selected_charts[0].values():
+            song_list = []
+            for song in chart.songs:
+                song_dict = {
+                    "title": song.title,
+                    "artist": song.artist,
+                    "arranger": song.arranger,
+                }
+                song_list.append(song_dict)
+            chart_dict = {
+                "slug": chart.slug,
+                "is_single": chart.is_single,
+                "title": chart.title,
+                "songs": song_list
+            }
+            a_list.append(chart_dict)
+
+        b_list = []
+        for chart in selected_charts[1].values():
+            song_list = []
+            for song in chart.songs:
+                song_dict = {
+                    "title": song.title,
+                    "artist": song.artist,
+                    "arranger": song.arranger,
+                }
+                song_list.append(song_dict)
+            chart_dict = {
+                "slug": chart.slug,
+                "is_single": chart.is_single,
+                "title": chart.title,
+                "songs": song_list
+            }
+            b_list.append(chart_dict)
+        chart_list = [a_list, b_list]
+    else:
+        x_list = []
+        for chart in selected_charts[0].values():
+            song_list = []
+            for song in chart.songs:
+                song_dict = {
+                    "title": song.title,
+                    "artist": song.artist,
+                    "arranger": song.arranger,
+                }
+                song_list.append(song_dict)
+            chart_dict = {
+                "slug": chart.slug,
+                "is_single": chart.is_single,
+                "title": chart.title,
+                "songs": song_list
+            }
+            x_list.append(chart_dict)
+        chart_list = [x_list]
+
+    book_data = {
+        "valid_book": True,
+        "files": {
+            "raw": raw,
+            "imposed": imposed
+        },
+        "ensemble": ensemble_name,
+        "abside": abside,
+        "max_id": max_id,
+        "custom_order": custom_order,
+        "instruments": instruments,
+        "charts": chart_list
+    }
+
+    with open(os.path.join(issue_dir, "book_info.json"), 'w') as f:
+        json.dump(book_data, f)
+
     return issue_dir
