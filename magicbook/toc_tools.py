@@ -2,6 +2,7 @@
 Functions that produce a table of contents
 given a list of charts, and page format.
 '''
+from io import BytesIO
 
 from reportlab.platypus import (
     BaseDocTemplate,
@@ -114,9 +115,11 @@ def create_toc(
         title_font_size = 24
         column_widths = [26, 160, 78]
 
-    toc_path = f"{output_loc}/toc.pdf"
+    toc_output = BytesIO()
+
+    # toc_path = f"{output_loc}/toc.pdf"
     doc = BaseDocTemplate(
-        toc_path,
+        toc_output,
         pagesize=page_size,
         rightMargin=margin_x,
         leftMargin=margin_x,
@@ -272,4 +275,4 @@ def create_toc(
 
     doc.build(elements)
 
-    return toc_path
+    return toc_output

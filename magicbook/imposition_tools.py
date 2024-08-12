@@ -98,11 +98,13 @@ def get_book_path(instrument, source_dir):
     return list_of_paths
 
 
-def impose_and_merge_portrait(part: Part,
-                              format: str,
-                              blanks: int,
-                              output_name: str,
-                              toc=None):
+def impose_and_merge_portrait(
+        part: Part,
+        format: str,
+        blanks: int,
+        output_name: str,
+        toc: BytesIO = None
+        ):
     pass
 
 
@@ -175,9 +177,9 @@ def impose_and_merge(
         blanks: int,
         output_name: str,
         format: str,
-        toc=None,
+        toc: BytesIO = None,
         prefix=None
-        ):
+        ) -> BytesIO:
     """
     merges the pdfs from a list of parts, and adds n blank pages to the end
     calls create_stamp to add a chart ID to each page as well
@@ -292,10 +294,13 @@ def impose_and_merge(
     if blanks > 0:
         for n in range(0, blanks):
             writer.add_blank_page(width=paper_x, height=paper_y)
-    writer.write(output_name)
+    bytes_output = BytesIO()
+    writer.write(bytes_output)
     writer.close()
     reader.close()
     new_bytes_object.close()
+
+    return bytes_output
 
 
 def impose_for_printing(path_to_a: str,
@@ -571,58 +576,63 @@ def merge_marchpacks(
                 f"{imposed_dir}/{book_format}/{instrument['slug']}"
                 )
 
-            os.makedirs(assemble_path)
+            a_pgs = BytesIO()
+            b_pgs = BytesIO()
+            toc_pg = BytesIO()
 
             if add_toc is True:
                 a_pages += 1
                 toc_data = compile_toc_data(c_list, a_parts, b_parts)
-                toc_path = create_toc(book_info['ensemble'],
-                                      instrument['name'],
-                                      book_format,
-                                      assemble_path,
-                                      toc_data)
+                toc_pg = create_toc(
+                    book_info['ensemble'],
+                    instrument['name'],
+                    book_format,
+                    assemble_path,
+                    toc_data
+                    )
 
             if a_pages > b_pages:
                 x_pages = a_pages - b_pages
                 # merge pdfs with blank pages on b side
-                impose_and_merge(a_parts,
-                                 0,
-                                 f"{assemble_path}/A.pdf",
-                                 book_format,
-                                 toc=toc_path,
-                                 prefix='A')
-                impose_and_merge(b_parts,
-                                 x_pages,
-                                 f"{assemble_path}/B.pdf",
-                                 book_format,
-                                 prefix='B')
-                impose_for_printing(
+                a_pgs = impose_and_merge(
+                    a_parts,
+                    0,
                     f"{assemble_path}/A.pdf",
+                    book_format,
+                    toc=toc_pg,
+                    prefix='A')
+                b_pgs = impose_and_merge(
+                    b_parts,
+                    x_pages,
                     f"{assemble_path}/B.pdf",
-                    f"""{imposed_dir}/{book_format}/
-                    {instrument['slug']}.pdf"""
-                    )
+                    book_format,
+                    prefix='B')
+
             else:
                 x_pages = b_pages - a_pages
                 # merge pdfs with blank pages on a side
-                impose_and_merge(a_parts,
-                                 x_pages,
-                                 f"{assemble_path}/A.pdf",
-                                 book_format,
-                                 toc=toc_path,
-                                 prefix='A')
-                impose_and_merge(b_parts,
-                                 0,
-                                 f"{assemble_path}/B.pdf",
-                                 book_format,
-                                 prefix='B')
+                a_pgs = impose_and_merge(
+                    a_parts,
+                    x_pages,
+                    f"{assemble_path}/A.pdf",
+                    book_format,
+                    toc=toc_pg,
+                    prefix='A'
+                    )
+                b_pgs = impose_and_merge(
+                    b_parts,
+                    0,
+                    f"{assemble_path}/B.pdf",
+                    book_format,
+                    prefix='B'
+                    )
 
             pdfname = f'{instrument['slug']}.pdf'
 
             if book_format in MARCHPACK_FORMATS:
                 impose_for_printing(
-                    f"{assemble_path}/A.pdf",
-                    f"{assemble_path}/B.pdf",
+                    a_pgs,
+                    b_pgs,
                     f"{imposed_dir}/{book_format}/{pdfname}"
                     )
             else:
@@ -633,8 +643,8 @@ def merge_marchpacks(
                 merger = pypdf.PdfWriter()
 
                 for pdf in [
-                        f"{assemble_path}/A.pdf",
-                        f"{assemble_path}/B.pdf"
+                        a_pgs,
+                        b_pgs
                         ]:
                     merger.append(pdf)
 
@@ -649,9 +659,11 @@ def merge_marchpacks(
                             check your ensemble json file!""")
         else:
             for book in SPLITSORT[instrument['div']]:
-                path = os.path.join(raw_dir,
-                                    instrument['slug'],
-                                    book['name'])
+                path = os.path.join(
+                    raw_dir,
+                    instrument['slug'],
+                    book['name']
+                    )
                 print(f"merging{instrument['name']} {book['name']}:")
 
                 a_parts, a_pages = pdf_path_list(
@@ -672,12 +684,14 @@ def merge_marchpacks(
                     f'{instrument['slug']}{book['name']}'
                 )
 
-                os.makedirs(assemble_path)
-
                 if add_toc is True:
                     a_pages += 1
-                    toc_data = compile_toc_data(c_list, a_parts, b_parts)
-                    toc_path = create_toc(
+                    toc_data = compile_toc_data(
+                        c_list,
+                        a_parts,
+                        b_parts
+                        )
+                    toc_pg = create_toc(
                         book_info['ensemble'],
                         f"{instrument['name']} {book['name']}",
                         book_format,
@@ -688,41 +702,45 @@ def merge_marchpacks(
                 if a_pages > b_pages:
                     x_pages = a_pages - b_pages
                     # merge pdfs with blank pages on b side
-                    impose_and_merge(a_parts,
-                                     0,
-                                     f"{assemble_path}/A.pdf",
-                                     book_format,
-                                     toc=toc_path,
-                                     prefix='A'
-                                     )
-                    impose_and_merge(b_parts,
-                                     x_pages,
-                                     f"{assemble_path}/B.pdf",
-                                     book_format,
-                                     prefix='B'
-                                     )
+                    a_pgs = impose_and_merge(
+                        a_parts,
+                        0,
+                        f"{assemble_path}/A.pdf",
+                        book_format,
+                        toc=toc_pg,
+                        prefix='A'
+                        )
+                    b_pgs = impose_and_merge(
+                        b_parts,
+                        x_pages,
+                        f"{assemble_path}/B.pdf",
+                        book_format,
+                        prefix='B'
+                        )
                 else:
                     x_pages = b_pages - a_pages
                     # merge pdfs with blank pages on a side
-                    impose_and_merge(a_parts,
-                                     x_pages,
-                                     f"{assemble_path}/A.pdf",
-                                     book_format,
-                                     toc=toc_path,
-                                     prefix='A'
-                                     )
-                    impose_and_merge(b_parts,
-                                     0,
-                                     f"{assemble_path}/B.pdf",
-                                     book_format,
-                                     prefix='B'
-                                     )
+                    a_pgs = impose_and_merge(
+                        a_parts,
+                        x_pages,
+                        f"{assemble_path}/A.pdf",
+                        book_format,
+                        toc=toc_pg,
+                        prefix='A'
+                        )
+                    b_pgs = impose_and_merge(
+                        b_parts,
+                        0,
+                        f"{assemble_path}/B.pdf",
+                        book_format,
+                        prefix='B'
+                        )
                 pdfname = f'{instrument['slug']}{book['name']}.pdf'
 
                 if book_format in MARCHPACK_FORMATS:
                     impose_for_printing(
-                        f"{assemble_path}/A.pdf",
-                        f"{assemble_path}/B.pdf",
+                        a_pgs,
+                        b_pgs,
                         f"{imposed_dir}/{book_format}/{pdfname}"
                         )
                 else:
@@ -733,8 +751,8 @@ def merge_marchpacks(
                     merger = pypdf.PdfWriter()
 
                     for pdf in [
-                            f"{assemble_path}/A.pdf",
-                            f"{assemble_path}/B.pdf"
+                            a_pgs,
+                            b_pgs
                             ]:
                         merger.append(pdf)
 
