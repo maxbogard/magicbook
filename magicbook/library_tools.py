@@ -1,7 +1,7 @@
 import os
 import json
 import jsonschema
-import survey
+# import survey
 
 from constants import PAGE_FORMATS
 
@@ -91,27 +91,29 @@ def strip_part_filename(
 #     return selected
 
 
-def lib_single_query(loc, pageid="", prefix=None):
-    """
-    prompts the user to select a single chart from a list of charts
-    optional input to specify the page ID
-    """
-    if prefix is None:
-        pre = ""
-    else:
-        pre = f"{prefix}"
-    choices = []
-    for cha in loc:
-        choices.append(cha.title)
-    selection = survey.routines.select(
-        f'SELECT CHART: {pre}{pageid}',
-        options=choices
-        )
-    print("\n")
-    selected = loc[selection]
-    if pageid is True:
-        print(f"{pageid}: - {selected.title}")
-    return selected
+# deprecated, now in simple_io_tools.py
+
+# def lib_single_query(loc, pageid="", prefix=None):
+#     """
+#     prompts the user to select a single chart from a list of charts
+#     optional input to specify the page ID
+#     """
+#     if prefix is None:
+#         pre = ""
+#     else:
+#         pre = f"{prefix}"
+#     choices = []
+#     for cha in loc:
+#         choices.append(cha.title)
+#     selection = survey.routines.select(
+#         f'SELECT CHART: {pre}{pageid}',
+#         options=choices
+#         )
+#     print("\n")
+#     selected = loc[selection]
+#     if pageid is True:
+#         print(f"{pageid}: - {selected.title}")
+#     return selected
 
 
 def show_chart_details(chart, lib):

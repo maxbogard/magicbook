@@ -1,7 +1,6 @@
 import os
 import json
 from simple_term_menu import TerminalMenu
-import survey
 from prompt_toolkit import print_formatted_text as print
 from prompt_toolkit import HTML
 
@@ -145,72 +144,51 @@ def main():
                 book_order_data,
                 SPLITSORT
                 )
-            if survey.routines.inquire("Impose PDFS?", default=True) is True:
-                while True:
-                    print('SELECT BOOK FORMAT:')
-                    format_menu = TerminalMenu(book_formats)
-                    format_entry_index = format_menu.show()
-                    if book_formats[format_entry_index] == 'MarchpackSplit':
-                        print('Not yet implemented')
-                    elif book_formats[
-                            format_entry_index
-                            ] == 'MarchpackComprehensive':
-                        merge_marchpacks(
-                            selected_charts,
-                            issue_dir,
-                            book_format='MarchpackComprehensive'
-                            )
-                        print('MarchpackComprehensive books printed!')
-                        print('Print another format, or return to main menu')
-                    elif book_formats[format_entry_index] == 'BinderOnePartPg':
-                        merge_marchpacks(
-                            selected_charts,
-                            issue_dir,
-                            book_format='BinderOnePartPg'
-                            )
-                        print('MarchpackComprehensive books printed!')
-                        print('Print another format, or return to main menu')
-                    elif book_formats[
-                            format_entry_index
-                            ] == 'BinderOneChartPg':
-                        print('Not yet implemented')
-                    elif book_formats[
-                            format_entry_index
-                            ] == 'BinderSaveSomePaper':
-                        print('Not yet implemented')
-                    elif book_formats[
-                            format_entry_index
-                            ] == 'BinderSaveLotsPaper':
-                        print('Not yet implemented')
-                    elif book_formats[
-                            format_entry_index
-                            ] == '(Return to Main Menu)':
-                        break
+            print('Books assembled! How would you like them printed?')
+            while True:
+                print('SELECT BOOK FORMAT:')
+                format_menu = TerminalMenu(book_formats)
+                format_entry_index = format_menu.show()
+                if book_formats[format_entry_index] == 'MarchpackSplit':
+                    print('Not yet implemented')
+                elif book_formats[
+                        format_entry_index
+                        ] == 'MarchpackComprehensive':
+                    merge_marchpacks(
+                        selected_charts,
+                        issue_dir,
+                        book_format='MarchpackComprehensive'
+                        )
+                    print('MarchpackComprehensive books printed!')
+                    print('Print another format, or return to main menu')
+                elif book_formats[format_entry_index] == 'BinderOnePartPg':
+                    merge_marchpacks(
+                        selected_charts,
+                        issue_dir,
+                        book_format='BinderOnePartPg'
+                        )
+                    print('MarchpackComprehensive books printed!')
+                    print('Print another format, or return to main menu')
+                elif book_formats[
+                        format_entry_index
+                        ] == 'BinderOneChartPg':
+                    print('Not yet implemented')
+                elif book_formats[
+                        format_entry_index
+                        ] == 'BinderSaveSomePaper':
+                    print('Not yet implemented')
+                elif book_formats[
+                        format_entry_index
+                        ] == 'BinderSaveLotsPaper':
+                    print('Not yet implemented')
+                elif book_formats[
+                        format_entry_index
+                        ] == '(Return to Main Menu)':
+                    break
 
             going_home()
         elif options[menu_entry_index] == "Impose Created Books":
-            if output_dir is False:
-                existing_books = list_assembled_books(output_dir)
-                print("You didn't assemble any books during this session.")
-                if existing_books is False:
-                    print("There are no previously assembled books either.")
-                    print("Please assemble some books first.")
-                    going_home()
-            # else:
-        # NEED A WAY TO RETREIVE CHART OBJECTS TO PRINT A PREVIOUS BOOK!!
-        # print("Would you like to choose a previously assembled book?")
-        # existing_books.append("Return to Main Menu")
-        # imposition_menu = TerminalMenu(existing_books)
-        # imposition_entry_index = imposition_menu.show()
-        # if existing_books[imposition_entry_index] == "Return to Main Menu":
-        #     going_home()
-        # else:
-        #     for book in existing_books:
-        #         if existing_books[imposition_entry_index] == book:
-        #             selected_book = book
-        #             break
-
-            merge_marchpacks(selected_charts, True, issue_dir, ensemble_info)
+            print('Not yet implemented')
             going_home()
 
 
