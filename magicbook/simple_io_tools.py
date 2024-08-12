@@ -41,6 +41,13 @@ def assemble_book_questions(
             ]:
     """
     """
+    if len(charts_list) < 1:
+        print(
+            "No charts found in the library.\n"
+            "You can't build a book without any charts!"
+            )
+        exit()
+
     ens_name = ensemble_info['name']
     print(f"You are about to assemble books for the {ens_name}.")
     print("What charts are going in these books?")

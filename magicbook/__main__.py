@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+import sys
 
 import os
 import json
@@ -281,12 +282,12 @@ def setup_magicbook_library(library_path):
             dir=DEFAULT_CONFIG['directories']['schema']
         )
         setup_json(
-            mbp,
+            mbp_config,
             'generic_ensemble.json',
             DEFAULT_ENSEMBLE,
         )
         setup_json(
-            mbp,
+            mbp_config,
             'instruments.json',
             DEFAULT_INSTRUMENTS,
         )
@@ -300,64 +301,140 @@ def main():
     The goal is to use this to run a GUI with gooey
     """
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog="magicbook",
+        description="Sheet music management for large ensembles",
+        epilog="v0.0.2, licensed under the AGPL-3.0"
+    )
 
     parser.add_argument("path")
 
-    # parser.add_argument("-t", "--text-adventure", action="store_true")
-    parser.add_argument("-n", "--new-library", action="store_true")
-    parser.add_argument(
+    primary = parser.add_mutually_exclusive_group()
+    primary.add_argument(
+        "-t",
+        "--text-adventure",
+        action="store_true",
+        help="Runs magicbook with the old text-adventure style UI"
+        )
+    primary.add_argument(
+        "-n",
+        "--new-library",
+        action="store_true",
+        help="Creates a new magicbook library in the specified path"
+        )
+    primary.add_argument(
         "-a",
         "--audit-library",
-        help="Audits each chart dir in the library for a valid info.json file",
-        action="store_true")
-    parser.add_argument("-b", "--build-books", action="store_true")
+        action="store_true",
+        help="Audits each chart dir in the library for a valid info.json file"
+        )
+    primary.add_argument(
+        "-b",
+        "--build-books",
+        action="store_true",
+        help="Builds a set of books from the specified library"
+        )
+    primary.add_argument(
+        "-p",
+        "--impose-books",
+        action="store_true",
+        help="Imposes a set of books for printing into the specified format"
+    )
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=None if sys.argv[1:] else ["-h"])
 
     magicbook_path = Path(args.path)
 
-    # if args.text_adventure is True:
-    #     text_adventure()
-    #     exit()
+    if args.text_adventure is True:
+        text_adventure()
+        exit()
 
     if args.new_library is True:
         setup_magicbook_library(magicbook_path)
         exit()
-    else:
-        settings = load_settings(magicbook_path, DEFAULT_CONFIG)
-        if settings is False:
-            print(
-                'This directory doesn\'t look like a magicbook library\n'
-                'Or the magicbook library might be corrupted\n'
-                'Please run magicbook with the -n flag to create a new library'
-            )
-            exit()
 
+    settings = load_settings(magicbook_path, DEFAULT_CONFIG)
+    if settings is False:
+        print(
+            'This directory doesn\'t look like a magicbook library\n'
+            'Or the magicbook library might be corrupted\n'
+            'Please run magicbook with the -n flag to create a new library'
+        )
+        exit()
+
+    library_path = os.path.join(
+        magicbook_path,
+        settings['directories']['library']
+        )
+
+    v, x, t, lib = audit_library(
+        library_path,
+        os.path.join(
+            magicbook_path,
+            'config',
+            settings['directories']['schema'],
+            'chart-info.json'
+        )
+        )
+    if v is False:
+        print(f'{x} / {t} charts info.json failed validation.')
+        print('Please fix these and try again')
+        exit()
+    else:
+        print(
+            'The library passed the audit '
+            f'with all {t} charts valid!\n'
+            )
     if args.audit_library is True:
-        v, x, t, lib = audit_library(
-            os.path.join(
-                magicbook_path,
-                settings['directories']['library']
-            ),
-            os.path.join(
-                magicbook_path,
-                'config',
-                settings['directories']['schema'],
-                'chart-info.json'
+        exit()
+
+    default_instruments = load_instruments(
+        os.path.join(
+            magicbook_path,
+            'config',
+            settings['default-instruments']
             )
-            )
-        if v is False:
-            print(f'{x} / {t} charts info.json failed validation.')
-            print('Please fix these and try again')
-            exit()
-        else:
-            print(
-                'The library passed the audit '
-                f'with all {t} charts valid!\n'
+        )
+
+    ensemble_path = os.path.join(
+        magicbook_path,
+        'config',
+        settings['default-ensemble']
+        )
+
+    ensemble_info = load_ensemble(ensemble_path)
+    ensemble_instruments = ensemble_info['instruments']
+    for instrument in ensemble_instruments:
+        if instrument.get('alternates') is None:
+            if instrument['slug'] in default_instruments.keys():
+                instrument['alternates'] = (
+                    default_instruments[instrument['slug']]['alternates']
                 )
-            exit()
+
+    output_dir = os.path.join(
+        magicbook_path,
+        settings['directories']['output']
+        )
+
     if args.build_books is True:
+        selected_charts, book_order_data = (
+            assemble_book_questions(ensemble_info, lib)
+            )
+        issue_dir = assemble_books(
+            selected_charts,
+            library_path,
+            output_dir,
+            ensemble_instruments,
+            ensemble_info['slug'],
+            ensemble_info['name'],
+            book_order_data,
+            SPLITSORT
+                )
+
+        print(f'Books assembled to {magicbook_path}/{issue_dir}')
+        exit()
+
+    if args.impose_books is True:
         print('Not yet implemented')
         exit()
 

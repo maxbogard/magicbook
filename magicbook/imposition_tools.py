@@ -55,27 +55,6 @@ class Part(Chart):
         self.pagect = count_pdf_pages(part_path)
         self.prefix = prefix
 
-# likely deprecated function
-
-# def get_book_paths(ensemble_info: dict, source_dir: str) -> list:
-#     """
-#     Returns a list of paths to the pdfs in the output folder
-#     """
-#     book_paths = []
-#     for instrument in ensemble_info['instruments']:
-#         if instrument['div'] == 1:
-#             book_paths.append(os.path.join(source_dir, instrument['slug']))
-#         elif instrument['div'] > 1:
-#             book_paths.append(os.path.join(
-#                 source_dir,
-#                 f"{instrument['slug']}{instrument['div']}"
-#                 ))
-#         else:
-#             raise ValueError("""an instrument can't be divided into
-#                              less than one part!
-#                              check your ensemble json file!""")
-#     return book_paths
-
 
 def get_book_path(instrument, source_dir):
     """
@@ -344,63 +323,6 @@ def impose_for_printing(path_to_a: str,
 
     writer.close()
     reader_n.close()
-
-# deprecated, functionality now in simple_io_tools.py
-
-# def select_chart_order(
-#         charts: list[Chart],
-#         abside: bool,
-#         maxid=None
-#         ) -> list[dict]:
-#     """
-#     Takes a list of charts and asks the user to select how they should be
-#     ordered in the book. Can either order A/B based on side of the marchpack,
-#     or a non-prefixed numerical value
-#     """
-#     charts_rem = charts.copy()
-#     if abside is True:
-#         marchpack_pages = (len(charts_rem) // 2)
-#         marchpack_rem = (len(charts_rem) % 2)
-#         print('select charts for A side, in order from first to last')
-#         a_index = {}
-#         a_id = 1
-#         for n in range(0, (marchpack_pages)):
-#             chart = library_tools.lib_single_query(
-#                 charts_rem,
-#                 pageid=f"{a_id}",
-#                 prefix='A'
-#                 )
-#             charts_rem.remove(chart)
-#             a_index[a_id] = chart
-#             a_id += 1
-#         print('select charts for B side, in order from first to last')
-#         b_index = {}
-#         b_id = ((maxid - marchpack_pages) + 1)
-#         for n in range(0, (marchpack_pages + marchpack_rem)):
-#             chart = library_tools.lib_single_query(
-#                 charts_rem,
-#                 pageid=f"{b_id}",
-#                 prefix='B'
-#                 )
-#             charts_rem.remove(chart)
-#             b_index[b_id] = chart
-#             b_id += 1
-
-#         return [a_index, b_index]
-#     else:
-#         book_pages = len(charts_rem)
-#         print('select charts in order from first to last')
-#         x_index = {}
-#         x_id = 1
-#         for n in range(0, book_pages):
-#             chart = library_tools.lib_single_query(
-#                 charts_rem,
-#                 pageid=f"{x_id}"
-#                 )
-#             charts_rem.remove(chart)
-#             x_index[x_id] = chart
-#             x_id += 1
-#         return [x_index]
 
 
 def auto_order_charts(charts: list[Chart], abside: bool) -> list[dict]:
