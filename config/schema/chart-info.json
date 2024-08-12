@@ -1,40 +1,40 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "Chart",
-    "description": "Sheet music containing one or more songs",
-    "type": "object",
-    "properties": {
-        "slug": {
-            "description": "The name of the diretory this chart is stored in",
-            "type": "string"
-        },
-        "title": {
-            "description": "The title of the chart, not necessary when the chart only contains one chart",
-            "type": "string"
-        },
-        "songs": {
-            "description": "Songs that are included on this chart",
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "title": {
-                        "description": "the title of the song",
-                        "type": "string"
-                    },
-                    "artist": {
-                        "description": "the artist the song is most commonly associated with",
-                        "type": "string"
-                    },
-                    "arranger": {
-                        "description": "the arranger of the song",
-                        "type": "string"
-                    }
-                },
-                "minItems": 1,
-                "uniqueItems": true
-            }
-        }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chart",
+  "description": "Sheet music containing one or more songs",
+  "type": "object",
+  "properties": {
+    "slug": {
+      "description": "The name of the diretory this chart is stored in",
+      "type": "string"
     },
-    "required": [ "slug", "songs" ]
+    "title": {
+      "description": "The title of the chart, not necessary when the chart only contains one chart",
+      "type": "string"
+    },
+    "songs": {
+      "description": "Songs that are included on this chart",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "description": "the title of the song",
+            "type": "string"
+          },
+          "artist": {
+            "description": "the artist the song is most commonly associated with",
+            "type": "string"
+          },
+          "arranger": {
+            "description": "the arranger of the song",
+            "type": "string"
+          }
+        },
+        "minItems": 1,
+        "uniqueItems": true
+      }
+    }
+  },
+  "required": ["slug", "songs"]
 }

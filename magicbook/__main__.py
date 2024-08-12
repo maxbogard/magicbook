@@ -1,3 +1,6 @@
+import argparse
+from pathlib import Path
+
 import os
 import json
 from simple_term_menu import TerminalMenu
@@ -10,7 +13,16 @@ from book_tools import assemble_books
 from imposition_tools import merge_marchpacks
 from simple_io_tools import assemble_book_questions
 
-from constants import SPLITSORT, MARCHPACK_FORMATS, BINDER_FORMATS
+from constants import (
+    MAGICBOOK_DIRECTORY,
+    DEFAULT_CONFIG,
+    DEFAULT_SCHEMA,
+    DEFAULT_ENSEMBLE,
+    DEFAULT_INSTRUMENTS,
+    SPLITSORT,
+    MARCHPACK_FORMATS,
+    BINDER_FORMATS
+)
 
 # various unorganized config files
 
@@ -58,18 +70,14 @@ def going_home():
     print('\n...returning to main menu\n')
 
 
-def main():
+def text_adventure():
     """
-    Will run various functions from various modules
+    The old, text-adventure style UI for magicbook
+    Find the argparse command in main() to launch
     """
-
     CONFIG_DIR = './config/'
     config = load_config(CONFIG_DIR)
 
-    # ensembles_dir = os.path.join(
-    #     CONFIG_DIR,
-    #     config['directories']['ensembles']
-    #     )
     schema_dir = os.path.join(
         CONFIG_DIR,
         config['directories']['schema']
@@ -190,6 +198,168 @@ def main():
         elif options[menu_entry_index] == "Impose Created Books":
             print('Not yet implemented')
             going_home()
+
+
+def setup_directory(mbp, dir):
+    if not os.path.exists(
+        os.path.join(
+            mbp,
+            dir,
+        )
+    ):
+        os.mkdir(
+            os.path.join(
+                mbp,
+                dir,
+            )
+        )
+
+
+def setup_json(mbp, file, data, dir=None):
+    if dir is None:
+        with open(
+            os.path.join(
+                mbp,
+                file
+            ), 'w'
+        ) as json_file:
+            json.dump(data, json_file)
+    else:
+        with open(
+            os.path.join(
+                mbp,
+                dir,
+                file
+            ), 'w'
+        ) as json_file:
+            json.dump(data, json_file)
+
+
+def load_settings(mbp, config):
+    if os.path.exists(
+        os.path.join(mbp, 'config', 'config.json')
+    ):
+        with open(
+            os.path.join(mbp, 'config', 'config.json')
+        ) as config_file:
+            config = json.load(config_file)
+        return config
+    else:
+        return False
+
+
+def setup_magicbook_library(library_path):
+    mbp = os.path.join(library_path, MAGICBOOK_DIRECTORY)
+    mbp_config = os.path.join(mbp, 'config')
+
+    if os.path.exists(mbp):
+        print(
+            'Directory "magicbook-library" already exists in the cwd.\n'
+            'If this is an existing magicbook library, please open it\n'
+            'If not, please rename this directory, so Magicbook won\'t'
+            'overwrite it.'
+        )
+        exit()
+    else:
+        os.mkdir(mbp)
+        os.mkdir(mbp_config)
+
+        with open(f'{mbp_config}/config.json', 'w') as config_file:
+            json.dump(DEFAULT_CONFIG, config_file)
+
+        setup_directory(mbp_config, DEFAULT_CONFIG['directories']['ensembles'])
+        setup_directory(mbp_config, DEFAULT_CONFIG['directories']['templates'])
+        setup_directory(mbp_config, DEFAULT_CONFIG['directories']['schema'])
+        setup_directory(mbp, DEFAULT_CONFIG['directories']['library'])
+        setup_directory(mbp, DEFAULT_CONFIG['directories']['output'])
+        setup_directory(mbp, DEFAULT_CONFIG['directories']['logs'])
+
+        setup_json(
+            mbp_config,
+            'chart-info.json',
+            DEFAULT_SCHEMA,
+            dir=DEFAULT_CONFIG['directories']['schema']
+        )
+        setup_json(
+            mbp,
+            'generic_ensemble.json',
+            DEFAULT_ENSEMBLE,
+        )
+        setup_json(
+            mbp,
+            'instruments.json',
+            DEFAULT_INSTRUMENTS,
+        )
+        print('New magicbook library created in cwd/magicbook-library')
+        print('message about trim-guides PDF goes here')
+
+
+def main():
+    """
+    The CLI-style UI for magicbook, taking arguments.
+    The goal is to use this to run a GUI with gooey
+    """
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("path")
+
+    # parser.add_argument("-t", "--text-adventure", action="store_true")
+    parser.add_argument("-n", "--new-library", action="store_true")
+    parser.add_argument(
+        "-a",
+        "--audit-library",
+        help="Audits each chart dir in the library for a valid info.json file",
+        action="store_true")
+    parser.add_argument("-b", "--build-books", action="store_true")
+
+    args = parser.parse_args()
+
+    magicbook_path = Path(args.path)
+
+    # if args.text_adventure is True:
+    #     text_adventure()
+    #     exit()
+
+    if args.new_library is True:
+        setup_magicbook_library(magicbook_path)
+        exit()
+    else:
+        settings = load_settings(magicbook_path, DEFAULT_CONFIG)
+        if settings is False:
+            print(
+                'This directory doesn\'t look like a magicbook library\n'
+                'Or the magicbook library might be corrupted\n'
+                'Please run magicbook with the -n flag to create a new library'
+            )
+            exit()
+
+    if args.audit_library is True:
+        v, x, t, lib = audit_library(
+            os.path.join(
+                magicbook_path,
+                settings['directories']['library']
+            ),
+            os.path.join(
+                magicbook_path,
+                'config',
+                settings['directories']['schema'],
+                'chart-info.json'
+            )
+            )
+        if v is False:
+            print(f'{x} / {t} charts info.json failed validation.')
+            print('Please fix these and try again')
+            exit()
+        else:
+            print(
+                'The library passed the audit '
+                f'with all {t} charts valid!\n'
+                )
+            exit()
+    if args.build_books is True:
+        print('Not yet implemented')
+        exit()
 
 
 if __name__ == "__main__":

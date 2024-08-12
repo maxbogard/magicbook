@@ -1,6 +1,7 @@
 # Binary inputs & outputs
 sample-music-library/
 music-library/
+magicbook-library/
 output/
 dependencies/
 config/templates/

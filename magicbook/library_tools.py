@@ -60,62 +60,6 @@ def strip_part_filename(
     return part_core
 
 
-# this function is user i/o, has been replaced by a new function
-# in simple_io_tools.py
-
-# def lib_query(lib) -> list[Chart]:
-#     """
-#     Prompts the user to select one or more charts
-
-#     Returns:
-#         a list of charts, in object form
-#     """
-#     while True:
-#         choices = []
-#         for cha in lib:
-#             print(cha)
-#             print(cha.title)
-#             choices.append(cha.title)
-#         print(choices)
-#         selection = survey.routines.basket('SELECT CHARTS:', options=choices)
-#         print("\n")
-#         selected = []
-#         for c in selection:
-#             # selected.append(choices[c])
-#             selected.append(lib[c])
-#         print("You have selected the following charts:")
-#         for s in selected:
-#             print(f" - {s.title}")
-#         if survey.routines.inquire("Is this correct?", default=True) is True:
-#             break
-#     return selected
-
-
-# deprecated, now in simple_io_tools.py
-
-# def lib_single_query(loc, pageid="", prefix=None):
-#     """
-#     prompts the user to select a single chart from a list of charts
-#     optional input to specify the page ID
-#     """
-#     if prefix is None:
-#         pre = ""
-#     else:
-#         pre = f"{prefix}"
-#     choices = []
-#     for cha in loc:
-#         choices.append(cha.title)
-#     selection = survey.routines.select(
-#         f'SELECT CHART: {pre}{pageid}',
-#         options=choices
-#         )
-#     print("\n")
-#     selected = loc[selection]
-#     if pageid is True:
-#         print(f"{pageid}: - {selected.title}")
-#     return selected
-
-
 def show_chart_details(chart, lib):
     """
     Prints the details of a chart to the standard output
@@ -159,7 +103,7 @@ def audit_chart_json(chart: str, infopath: str, scmpath: str):
         return True, chart_obj
 
 
-def audit_library(libdir: str, scmpath: str) -> bool | int | int:
+def audit_library(libdir: str, scmpath: str) -> bool | int | int | list[Chart]:
     """
     Checks each chart in the library for a valid info.json file
 
@@ -168,9 +112,11 @@ def audit_library(libdir: str, scmpath: str) -> bool | int | int:
         schmdir: path pointing to the schema directory
 
     Returns:
+        bool: True if all charts pass audit, False if any fail
         integers x, t
         where x = number of charts failing audit,
           and t = total number of charts in library
+        list: a list of Charts that passed audit
     """
     x = 0
     t = 0
