@@ -8,7 +8,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 pyyaml = "^6.0.1"
-survey = "^5.4.0"
 jsonschema = "^4.23.0"
 simple-term-menu = "^1.6.4"
 prompt-toolkit = "^3.0.47"

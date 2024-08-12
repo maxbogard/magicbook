@@ -448,20 +448,6 @@ files = [
 ]
 
 [[package]]
-name = "survey"
-version = "5.4.0"
-description = "A simple library for creating beautiful interactive prompts."
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "survey-5.4.0-py3-none-any.whl", hash = "sha256:45623d45545597cd491690a07a89ff49fc73d4c70a5371e3da776f366dc106b7"},
-    {file = "survey-5.4.0.tar.gz", hash = "sha256:253d2d70d05178d75f6d9af04a0bf4385701cfd1e9d4de491789cff685df4c9b"},
-]
-
-[package.extras]
-docs = ["sphinx", "sphinx-autodoc-typehints (<1.25.3)", "sphinx-paramlinks", "sphinx-rtd-theme"]
-
-[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -486,4 +472,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "256e82678371a010da40a188b90af769345d16b7a7d2ce6f8f5e135364f26eb6"
+content-hash = "b864e78ace3787c851c376218a3fb64c222f01eb0d4b04171f98febb217e460d"
