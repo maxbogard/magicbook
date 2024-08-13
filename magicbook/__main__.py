@@ -8,6 +8,7 @@ from simple_term_menu import TerminalMenu
 from prompt_toolkit import print_formatted_text as print
 from prompt_toolkit import HTML
 
+from setup_tools import setup_magicbook_library
 from library_tools import audit_library, list_charts
 from book_tools import assemble_books
 # from book_tools import Instrument
@@ -19,11 +20,7 @@ from simple_io_tools import (
 )
 
 from constants import (
-    MAGICBOOK_DIRECTORY,
     DEFAULT_CONFIG,
-    DEFAULT_SCHEMA,
-    DEFAULT_ENSEMBLE,
-    DEFAULT_INSTRUMENTS,
     SPLITSORT,
     MARCHPACK_FORMATS,
     BINDER_FORMATS
@@ -210,41 +207,6 @@ def interactive_mode():
             going_home()
 
 
-def setup_directory(mbp, dir):
-    if not os.path.exists(
-        os.path.join(
-            mbp,
-            dir,
-        )
-    ):
-        os.mkdir(
-            os.path.join(
-                mbp,
-                dir,
-            )
-        )
-
-
-def setup_json(mbp, file, data, dir=None):
-    if dir is None:
-        with open(
-            os.path.join(
-                mbp,
-                file
-            ), 'w'
-        ) as json_file:
-            json.dump(data, json_file)
-    else:
-        with open(
-            os.path.join(
-                mbp,
-                dir,
-                file
-            ), 'w'
-        ) as json_file:
-            json.dump(data, json_file)
-
-
 def load_settings(mbp, config):
     """
     Loads a config json file from the selected magicbook library
@@ -259,56 +221,6 @@ def load_settings(mbp, config):
         return config
     else:
         return False
-
-
-def setup_magicbook_library(library_path):
-    """
-    Creates a new magicbook library in the specified path.
-    If the directory already exists, informs the user and quits.
-    """
-    mbp = os.path.join(library_path, MAGICBOOK_DIRECTORY)
-    mbp_config = os.path.join(mbp, 'config')
-
-    if os.path.exists(mbp):
-        print(
-            'Directory "magicbook-library" already exists in the cwd.\n'
-            'If this is an existing magicbook library, please open it\n'
-            'If not, please rename this directory, so Magicbook won\'t'
-            'overwrite it.'
-        )
-        exit()
-    else:
-        os.mkdir(mbp)
-        os.mkdir(mbp_config)
-
-        with open(f'{mbp_config}/config.json', 'w') as config_file:
-            json.dump(DEFAULT_CONFIG, config_file)
-
-        setup_directory(mbp_config, DEFAULT_CONFIG['directories']['ensembles'])
-        setup_directory(mbp_config, DEFAULT_CONFIG['directories']['templates'])
-        setup_directory(mbp_config, DEFAULT_CONFIG['directories']['schema'])
-        setup_directory(mbp, DEFAULT_CONFIG['directories']['library'])
-        setup_directory(mbp, DEFAULT_CONFIG['directories']['output'])
-        setup_directory(mbp, DEFAULT_CONFIG['directories']['logs'])
-
-        setup_json(
-            mbp_config,
-            'chart-info.json',
-            DEFAULT_SCHEMA,
-            dir=DEFAULT_CONFIG['directories']['schema']
-        )
-        setup_json(
-            mbp_config,
-            'generic_ensemble.json',
-            DEFAULT_ENSEMBLE,
-        )
-        setup_json(
-            mbp_config,
-            'instruments.json',
-            DEFAULT_INSTRUMENTS,
-        )
-        print('New magicbook library created in cwd/magicbook-library')
-        print('message about trim-guides PDF goes here')
 
 
 def main():
@@ -444,7 +356,10 @@ def main():
 
     if args.build_books is True:
         selected_charts, book_order_data = (
-            assemble_book_questions(ensemble_info, lib)
+            assemble_book_questions(
+                ensemble_info,
+                lib
+                )
             )
         issue_dir = assemble_books(
             selected_charts,
@@ -461,7 +376,9 @@ def main():
         exit()
 
     if args.impose_books is True:
-        book_dir = impose_books_questions(output_dir)
+        book_dir = impose_books_questions(
+            output_dir
+            )
 
         book_format = choose_format_questions()
 

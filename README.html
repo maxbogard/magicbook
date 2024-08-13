@@ -141,8 +141,26 @@
             <h1 id="magicbook">magicbook</h1>
 <p>A set of utilities for managing your large ensemble sheet music</p>
 <h2 id="getting-started">Getting Started</h2>
-<p>magicbook <em>currently</em> assumes you have the directory <code>./music-library/</code> in the
-root of the project, with the charts arranged in the following structure:</p>
+<p>Create a new <strong>magicbook</strong> library by running <code>magicbook (directory) -n</code>, this
+creates a new library in the specified directory. The library will have the
+following structure:</p>
+<pre><code>.
+├── config
+│   ├── config.json
+│   ├── ensembles
+│   ├── generic_ensemble.json
+│   ├── instruments.json
+│   ├── schema
+│   │   └── chart-info.json
+│   └── templates
+├── logs
+├── music-library
+│  
+└── output
+</code></pre>
+<p>the <code>music-library</code> directory is where all charts are stored - in order for
+<strong>magicbook</strong> to work, copy your charts into the <code>music-library</code> directory using
+the following structure:</p>
 <pre><code>├── (chart-slug)
 │   ├── info.json
 │   ├── (chart-slug) AUDIO.mp3
@@ -163,6 +181,7 @@ root of the project, with the charts arranged in the following structure:</p>
 </code></pre>
 <p>A sample music library with this structure is
 <a href="https://1drv.ms/f/s!AlNWUe2YKW0ehYUQOrpQwFzMWRFiQQ">available for download here</a></p>
+<p>There will be a command to import charts into the library in a future release.</p>
 <p>Note that <strong>magicbook</strong> currently requires a single-page letter size PDF file to
 properly impose the charts, stored as <code>./config/templates/trim-guides.pdf</code>. Use
 a PDF with trim markings
@@ -214,7 +233,11 @@ order.</li>
 </ul>
 <h3 id="planned-features">Planned Features</h3>
 <ul>
+<li>Importing charts into the library</li>
 <li>Update the chart &quot;info.json&quot; file</li>
+<li>Modifying created books with a record of previous versions and the date
+modified, so PDFs with only updated parts as opposed to the whole book can be
+created.</li>
 <li>This is not a complete list of planned features, will add more to this section
 as I organize my thoughts.</li>
 </ul>

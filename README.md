@@ -4,8 +4,29 @@ A set of utilities for managing your large ensemble sheet music
 
 ## Getting Started
 
-magicbook _currently_ assumes you have the directory `./music-library/` in the
-root of the project, with the charts arranged in the following structure:
+Create a new **magicbook** library by running `magicbook (directory) -n`, this
+creates a new library in the specified directory. The library will have the
+following structure:
+
+```
+.
+├── config
+│   ├── config.json
+│   ├── ensembles
+│   ├── generic_ensemble.json
+│   ├── instruments.json
+│   ├── schema
+│   │   └── chart-info.json
+│   └── templates
+├── logs
+├── music-library
+│  
+└── output
+```
+
+the `music-library` directory is where all charts are stored - in order for
+**magicbook** to work, copy your charts into the `music-library` directory using
+the following structure:
 
 ```
 ├── (chart-slug)
@@ -29,6 +50,8 @@ root of the project, with the charts arranged in the following structure:
 
 A sample music library with this structure is
 [available for download here](https://1drv.ms/f/s!AlNWUe2YKW0ehYUQOrpQwFzMWRFiQQ)
+
+There will be a command to import charts into the library in a future release.
 
 Note that **magicbook** currently requires a single-page letter size PDF file to
 properly impose the charts, stored as `./config/templates/trim-guides.pdf`. Use
@@ -72,7 +95,11 @@ As of this writing, **magicbook** performs the following tasks:
 
 ### Planned Features
 
+- Importing charts into the library
 - Update the chart "info.json" file
+- Modifying created books with a record of previous versions and the date
+  modified, so PDFs with only updated parts as opposed to the whole book can be
+  created.
 - This is not a complete list of planned features, will add more to this section
   as I organize my thoughts.
 

@@ -218,19 +218,23 @@ def assemble_book_questions(
 
 def impose_books_questions(
         output_dir: str,
+        ensemble_slug: str = None
         ):
     output_ensembles = []
     for dir in os.listdir(output_dir):
         output_ensembles.append(dir)
 
-    ensemble_select_menu = TerminalMenu(
-        output_ensembles,
-        multi_select=False,
-        show_multi_select_hint=False,
-        title="Select an ensemble to impose books for"
-    )
-    ensemble_menu_index = ensemble_select_menu.show()
-    selected_ensemble = output_ensembles[ensemble_menu_index]
+    if ensemble_slug is None:
+        ensemble_select_menu = TerminalMenu(
+            output_ensembles,
+            multi_select=False,
+            show_multi_select_hint=False,
+            title="Select an ensemble to impose books for"
+        )
+        ensemble_menu_index = ensemble_select_menu.show()
+        selected_ensemble = output_ensembles[ensemble_menu_index]
+    else:
+        selected_ensemble = ensemble_slug
 
     books_menu = []
     for dir in os.listdir(os.path.join(output_dir, selected_ensemble)):

@@ -4,8 +4,6 @@ but anything here should only be used to create an initial
 config.json file
 """
 
-MAGICBOOK_DIRECTORY = 'magicbook-library'
-
 DEFAULT_CONFIG = {
   "directories": {
     "ensembles": "ensembles",
