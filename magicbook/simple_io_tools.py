@@ -1,6 +1,13 @@
+import os
+
 from simple_term_menu import TerminalMenu
 
 from library_tools import Chart
+
+from constants import (
+    MARCHPACK_FORMATS,
+    BINDER_FORMATS
+    )
 
 
 def chart_names_list(charts_list: list[Chart]):
@@ -207,3 +214,58 @@ def assemble_book_questions(
     book_order_data = (abside, max_id, custom_order)
 
     return sorted_charts, book_order_data
+
+
+def impose_books_questions(
+        output_dir: str,
+        ):
+    output_ensembles = []
+    for dir in os.listdir(output_dir):
+        output_ensembles.append(dir)
+
+    ensemble_select_menu = TerminalMenu(
+        output_ensembles,
+        multi_select=False,
+        show_multi_select_hint=False,
+        title="Select an ensemble to impose books for"
+    )
+    ensemble_menu_index = ensemble_select_menu.show()
+    selected_ensemble = output_ensembles[ensemble_menu_index]
+
+    books_menu = []
+    for dir in os.listdir(os.path.join(output_dir, selected_ensemble)):
+        books_menu.append(dir)
+
+    book_select_menu = TerminalMenu(
+        books_menu,
+        multi_select=False,
+        show_multi_select_hint=False,
+        title="Select a book to impose"
+    )
+    book_menu_index = book_select_menu.show()
+    selected_book = books_menu[book_menu_index]
+
+    path_to_book = os.path.join(
+        selected_ensemble,
+        selected_book
+    )
+
+    return path_to_book
+
+
+def choose_format_questions():
+    format_list = []
+    for category in [MARCHPACK_FORMATS, BINDER_FORMATS]:
+        for format in category:
+            format_list.append(format)
+
+    format_select_menu = TerminalMenu(
+        format_list,
+        multi_select=False,
+        show_multi_select_hint=False,
+        title="Select a book format:"
+    )
+    format_menu_index = format_select_menu.show()
+    selected_format = format_list[format_menu_index]
+
+    return selected_format

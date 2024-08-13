@@ -433,7 +433,7 @@ def merge_marchpacks(
     with a specified order and page size.
     """
 
-    with open(os.path.join(source_dir, 'book_info.json')) as b:
+    with open(os.path.join(source_dir, 'book-info.json')) as b:
         book_info = json.load(b)
 
     raw_dir = os.path.join(source_dir, book_info['files']['raw'])

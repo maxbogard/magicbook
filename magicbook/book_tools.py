@@ -392,7 +392,7 @@ def assemble_books(
         "charts": chart_list
     }
 
-    with open(os.path.join(issue_dir, "book_info.json"), 'w') as f:
+    with open(os.path.join(issue_dir, "book-info.json"), 'w') as f:
         json.dump(book_data, f)
 
     return issue_dir

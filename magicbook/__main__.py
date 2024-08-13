@@ -12,7 +12,11 @@ from library_tools import audit_library
 from book_tools import assemble_books
 # from book_tools import Instrument
 from imposition_tools import merge_marchpacks
-from simple_io_tools import assemble_book_questions
+from simple_io_tools import (
+    assemble_book_questions,
+    impose_books_questions,
+    choose_format_questions
+)
 
 from constants import (
     MAGICBOOK_DIRECTORY,
@@ -435,7 +439,30 @@ def main():
         exit()
 
     if args.impose_books is True:
-        print('Not yet implemented')
+        book_dir = impose_books_questions(output_dir)
+
+        book_format = choose_format_questions()
+
+        path_to_book = os.path.join(
+            output_dir,
+            book_dir
+            )
+
+        book_info_f = os.path.join(
+            output_dir,
+            book_dir,
+            'book-info.json'
+            )
+
+        with open(book_info_f) as book_info:
+            book_info = json.load(book_info)
+
+        merge_marchpacks(
+            book_info['charts'],
+            path_to_book,
+            book_format
+        )
+
         exit()
 
 
