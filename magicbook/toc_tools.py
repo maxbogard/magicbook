@@ -71,7 +71,7 @@ def compile_toc_data(
         for part in all_parts:
             if chart.slug in part.slug:
                 songs_entry = []
-                if len(part.songs) > 1:
+                if chart.is_single is False:
                     for song in part.songs:
                         songs_entry.append(song.title)
                 toc_data.append(
