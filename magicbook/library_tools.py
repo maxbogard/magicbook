@@ -44,6 +44,23 @@ class Chart:
         return os.path.join(libdir, self.slug)
 
 
+def list_charts(lib: list[Chart]) -> list[str]:
+    """
+    Returns a list of chart names in the library
+    """
+    for chart in lib:
+        print(chart.title)
+        if chart.is_single is True:
+            print(f"     by {chart.songs[0].artist}")
+            print(f"     arranged by {chart.songs[0].arranger}")
+        else:
+            for song in chart.songs:
+                print(f"     {song.title}")
+                print(f"         by {song.artist}")
+                print(f"         arranged by {song.arranger}")
+        print("\n")
+
+
 def strip_part_filename(
         file,
         chart_name

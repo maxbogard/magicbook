@@ -8,7 +8,7 @@ from simple_term_menu import TerminalMenu
 from prompt_toolkit import print_formatted_text as print
 from prompt_toolkit import HTML
 
-from library_tools import audit_library
+from library_tools import audit_library, list_charts
 from book_tools import assemble_books
 # from book_tools import Instrument
 from imposition_tools import merge_marchpacks
@@ -34,6 +34,8 @@ from constants import (
 
 def load_config(config_dir) -> dict:
     """
+    ***CONFIG IS NOW STORED IN A MAGICBOOK LIBRARY
+    ***DEPRECATE THIS FUNCTION !!!
     Load a JSON config file
     """
     with open(os.path.join(config_dir, 'config.json')) as config_file:
@@ -43,6 +45,7 @@ def load_config(config_dir) -> dict:
 
 def load_ensemble(ensemble):
     """
+    ~NOT DEPRECATED
     Load a JSON ensemble file
     """
     with open(ensemble) as ensemble:
@@ -52,6 +55,7 @@ def load_ensemble(ensemble):
 
 def load_instruments(instruments):
     """
+    ~NOT DEPRECATED
     Load a JSON default instruments file
     """
     with open(instruments) as instruments:
@@ -62,6 +66,7 @@ def load_instruments(instruments):
 # and now the code begins...
 def list_assembled_books(dir):
     """
+    ***DEPRECATE THIS ???
     List all the books in a directory
     """
     books = []
@@ -75,10 +80,10 @@ def going_home():
     print('\n...returning to main menu\n')
 
 
-def text_adventure():
+def interactive_mode():
     """
-    The old, text-adventure style UI for magicbook
-    Find the argparse command in main() to launch
+    A fully interactive mode to run magicbook, in the style of an 80s text
+    adventure game, that doesn't require the user to pass any arguments.
     """
     CONFIG_DIR = './config/'
     config = load_config(CONFIG_DIR)
@@ -241,6 +246,9 @@ def setup_json(mbp, file, data, dir=None):
 
 
 def load_settings(mbp, config):
+    """
+    Loads a config json file from the selected magicbook library
+    """
     if os.path.exists(
         os.path.join(mbp, 'config', 'config.json')
     ):
@@ -254,6 +262,10 @@ def load_settings(mbp, config):
 
 
 def setup_magicbook_library(library_path):
+    """
+    Creates a new magicbook library in the specified path.
+    If the directory already exists, informs the user and quits.
+    """
     mbp = os.path.join(library_path, MAGICBOOK_DIRECTORY)
     mbp_config = os.path.join(mbp, 'config')
 
@@ -315,10 +327,10 @@ def main():
 
     primary = parser.add_mutually_exclusive_group()
     primary.add_argument(
-        "-t",
-        "--text-adventure",
+        "-int",
+        "--interactive",
         action="store_true",
-        help="Runs magicbook with the old text-adventure style UI"
+        help="Runs magicbook with the old interactive text-adventure style UI"
         )
     primary.add_argument(
         "-n",
@@ -344,13 +356,19 @@ def main():
         action="store_true",
         help="Imposes a set of books for printing into the specified format"
     )
+    primary.add_argument(
+        "-l",
+        "--list-charts",
+        action="store_true",
+        help="Lists all charts in the library, with chart details"
+    )
 
     args = parser.parse_args(args=None if sys.argv[1:] else ["-h"])
 
     magicbook_path = Path(args.path)
 
-    if args.text_adventure is True:
-        text_adventure()
+    if args.interactive is True:
+        interactive_mode()
         exit()
 
     if args.new_library is True:
@@ -419,6 +437,10 @@ def main():
         magicbook_path,
         settings['directories']['output']
         )
+
+    if args.list_charts is True:
+        list_charts(lib)
+        exit
 
     if args.build_books is True:
         selected_charts, book_order_data = (
