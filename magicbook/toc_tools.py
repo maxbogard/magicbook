@@ -25,12 +25,12 @@ from reportlab.lib.styles import (
 from reportlab.lib.pagesizes import (
     letter
 )
-from library_tools import (
+from .library_tools import (
     Chart,
     # Song
 )
 from functools import partial
-from constants import (
+from .constants import (
     LYRE_PAPER_X,
     LYRE_PAPER_Y,
     LYRE_MARGIN_X,

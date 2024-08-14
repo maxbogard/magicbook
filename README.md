@@ -24,9 +24,21 @@ following structure:
 └── output
 ```
 
-the `music-library` directory is where all charts are stored - in order for
-**magicbook** to work, copy your charts into the `music-library` directory using
-the following structure:
+Once the library is created, magicbook should be run from the root dirctory of
+the library. Alternatively, you can specify the path to the library with
+`magicbook -p PATH`.
+
+To add charts to the library, run
+`magicbook charts add SLUG True --song TITLE ARTIST ARRANGER`
+
+- SLUG is the directory the chart will go in, and can only contain lowercase
+  letters and dashes (-)
+- TITLE is the title of the song on the chart
+- ARTIST and ARRANGER are self-explanatory. If you don't know the artist or the
+  arranger, you can use `""` (an empty string).
+
+**magicbook** is still in development, so you have to copy the PDFs into the
+directory manually for now, following this structure:
 
 ```
 ├── (chart-slug)
@@ -51,7 +63,7 @@ the following structure:
 A sample music library with this structure is
 [available for download here](https://1drv.ms/f/s!AlNWUe2YKW0ehYUQOrpQwFzMWRFiQQ)
 
-There will be a command to import charts into the library in a future release.
+There will be a command to import PDFs into the library in a future release.
 
 Note that **magicbook** currently requires a single-page letter size PDF file to
 properly impose the charts, stored as `./config/templates/trim-guides.pdf`. Use
@@ -95,7 +107,7 @@ As of this writing, **magicbook** performs the following tasks:
 
 ### Planned Features
 
-- Importing charts into the library
+- Importing chart files into the library
 - Update the chart "info.json" file
 - Modifying created books with a record of previous versions and the date
   modified, so PDFs with only updated parts as opposed to the whole book can be

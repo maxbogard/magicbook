@@ -3,7 +3,7 @@ import shutil
 import datetime
 import json
 
-from library_tools import strip_part_filename
+from .library_tools import strip_part_filename
 
 # should instruments even bee a class? not sure what benefit is gained over
 # reading from a dictionary.
@@ -13,6 +13,34 @@ from library_tools import strip_part_filename
 #         self.slug = slug
 #         self.name = name
 #         self.divs = divs
+
+
+def list_books(
+        output_dir: str,
+        ):
+    book_list = []
+    for dir in os.listdir(output_dir):
+        for subdir in os.listdir(os.path.join(output_dir, dir)):
+            if os.path.exists(
+                    os.path.join(
+                        output_dir,
+                        dir,
+                        subdir,
+                        "book-info.json"
+                        )
+                    ):
+                with open(
+                    os.path.join(
+                            output_dir,
+                            dir,
+                            subdir,
+                            "book-info.json"
+                            ),
+                        'r') as f:
+                    book_data = json.load(f)
+                book_list.append([subdir, book_data["ensemble"]])
+
+    return book_list
 
 
 def prepare_folder(

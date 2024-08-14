@@ -4,12 +4,31 @@ from rich.console import Console
 from rich.table import Table
 from simple_term_menu import TerminalMenu
 
-from library_tools import Chart, list_charts
+from .library_tools import Chart, list_charts
+from .book_tools import list_books
 
-from constants import (
+from .constants import (
     MARCHPACK_FORMATS,
     BINDER_FORMATS
     )
+
+
+def display_book_list(output_dir: str):
+    """
+    Displays a list of books in the output directory, along with the ensemble
+    the book was prepared for.
+    """
+    list_of_books = list_books(output_dir)
+    chart_display = Table(title="List of Prepared Books")
+
+    chart_display.add_column("Book Name", justify="left", style="cyan")
+    chart_display.add_column("Ensemble", justify="left", style="magenta")
+
+    for entry in list_of_books:
+        chart_display.add_row(entry[0], entry[1])
+
+    console = Console()
+    console.print(chart_display)
 
 
 def chart_names_list(charts_list: list[Chart]):
@@ -289,3 +308,15 @@ def choose_format_questions():
     selected_format = format_list[format_menu_index]
 
     return selected_format
+
+
+def add_chart_results(
+        result,
+        report,
+):
+    if result is True:
+        print("Chart was successfully added to the library \n")
+        print(f"Directory: {report['chart-slug']}")
+    else:
+        print("Chart was not added \n")
+        print(f'Reason: {report['reason']}')

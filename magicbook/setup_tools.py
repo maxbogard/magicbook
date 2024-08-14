@@ -1,7 +1,7 @@
 import os
 import json
 
-from constants import (
+from .constants import (
     DEFAULT_CONFIG,
     DEFAULT_SCHEMA,
     DEFAULT_ENSEMBLE,

@@ -7,22 +7,22 @@ import os
 import pypdf
 # import library_tools
 import json
-from library_tools import Chart, strip_part_filename, create_chart_object
-from toc_tools import compile_toc_data, create_toc
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
-from constants import (SPLITSORT,
-                       LYRE_PAPER_X,
-                       LYRE_PAPER_Y,
-                       LYRE_CONTENT_X,
-                       LYRE_CONTENT_Y,
-                       #    LETTER_MARGIN_X,
-                       #    LETTER_MARGIN_Y,
-                       MARCHPACK_FORMATS,
-                       BINDER_FORMATS
-                       )
+from .library_tools import Chart, strip_part_filename, create_chart_object
+from .toc_tools import compile_toc_data, create_toc
+from .constants import (SPLITSORT,
+                        LYRE_PAPER_X,
+                        LYRE_PAPER_Y,
+                        LYRE_CONTENT_X,
+                        LYRE_CONTENT_Y,
+                        #    LETTER_MARGIN_X,
+                        #    LETTER_MARGIN_Y,
+                        MARCHPACK_FORMATS,
+                        BINDER_FORMATS
+                        )
 
 
 def count_pdf_pages(pdf_path: str) -> int:

@@ -1,9 +1,11 @@
 import os
+import re
 import json
 import jsonschema
-# import survey
 
-from constants import PAGE_FORMATS
+from rich.progress import track
+
+from .constants import PAGE_FORMATS
 
 
 class Song:
@@ -110,6 +112,68 @@ def create_chart_object(chartinfo: dict) -> Chart:
     return chart_objct
 
 
+def write_chart_files(
+        libdir: str,
+        files: list,
+        chart_info: dict
+        ):
+    chart_slug = chart_info['slug']
+    with open(os.path.join(libdir, chart_slug, "info.json"), 'w') as info:
+        json.dump(chart_info, info)
+
+
+def add_new_chart(
+        libdir: str,
+        chart_slug: str,
+        is_single: bool,
+        songs: list,
+        card_title: str = None
+        ) -> tuple[bool, dict]:
+    """
+    Given information about a chart, creates a folder and an info.json file
+    in the library. Does not add any other files to the chart folder
+    """
+
+    clean_chart_slug = chart_slug.lower()
+
+    if re.match(r'[^a-z\-]', clean_chart_slug) is not None:
+        return False, {'reason': "invalid chart slug"}
+
+    chart_info = {
+        "slug": clean_chart_slug,
+        "is_single": is_single,
+        "songs": songs,
+    }
+
+    if card_title is not None:
+        chart_info['title'] = card_title
+
+    if os.path.isdir(os.path.join(libdir, chart_slug)):
+        print(f'{chart_slug} already exists in the library')
+        return False, {'reason': "chart already exists"}
+    else:
+        os.mkdir(os.path.join(libdir, chart_slug))
+
+    with open(os.path.join(libdir, chart_slug, "info.json"), 'w') as info:
+        json.dump(chart_info, info)
+
+    return True, {'slug': clean_chart_slug}
+
+
+def chart_missing_parts(
+        libdir: str,
+        instruments: list[str],
+        chart: Chart
+        ) -> list[str]:
+    """
+    Returns a list of parts that are missing from the chart folder
+    """
+    for instrument in instruments:
+        for part in os.listdir(os.path.join(libdir, chart.slug)):
+            if instrument['slug'] in part:
+                break
+
+
 def audit_chart_json(chart: str, infopath: str, scmpath: str):
     """
     Validates a chart's info.json file against the schema
@@ -125,9 +189,9 @@ def audit_chart_json(chart: str, infopath: str, scmpath: str):
         print(err)
         return False, None
     else:
-        print(
-            f'{chart} info.json passed validation'
-        )
+        # print(
+        #     f'{chart} info.json passed validation'
+        # )
         chart_obj = Chart(chartinfo['slug'],
                           chartinfo['is_single'],
                           chartinfo['songs'],
@@ -135,7 +199,10 @@ def audit_chart_json(chart: str, infopath: str, scmpath: str):
         return True, chart_obj
 
 
-def audit_library(libdir: str, scmpath: str) -> bool | int | int | list[Chart]:
+def audit_library(
+        libdir: str,
+        scmpath: str
+        ) -> bool | int | int | list[Chart]:
     """
     Checks each chart in the library for a valid info.json file
 
@@ -153,7 +220,10 @@ def audit_library(libdir: str, scmpath: str) -> bool | int | int | list[Chart]:
     x = 0
     t = 0
     chart_list = []
-    for chart in sorted(os.listdir(libdir)):
+    for chart in track(
+            sorted(os.listdir(libdir)),
+            description='Auditing library'
+            ):
         chartpath = os.path.join(libdir, chart)
         infopath = os.path.join(chartpath, "info.json")
         if os.path.isdir(chartpath):

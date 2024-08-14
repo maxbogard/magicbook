@@ -158,9 +158,20 @@ following structure:</p>
 │  
 └── output
 </code></pre>
-<p>the <code>music-library</code> directory is where all charts are stored - in order for
-<strong>magicbook</strong> to work, copy your charts into the <code>music-library</code> directory using
-the following structure:</p>
+<p>Once the library is created, magicbook should be run from the root dirctory of
+the library. Alternatively, you can specify the path to the library with
+<code>magicbook -p PATH</code>.</p>
+<p>To add charts to the library, run
+<code>magicbook charts add SLUG True --song TITLE ARTIST ARRANGER</code></p>
+<ul>
+<li>SLUG is the directory the chart will go in, and can only contain lowercase
+letters and dashes (-)</li>
+<li>TITLE is the title of the song on the chart</li>
+<li>ARTIST and ARRANGER are self-explanatory. If you don't know the artist or the
+arranger, you can use <code>&quot;&quot;</code> (an empty string).</li>
+</ul>
+<p><strong>magicbook</strong> is still in development, so you have to copy the PDFs into the
+directory manually for now, following this structure:</p>
 <pre><code>├── (chart-slug)
 │   ├── info.json
 │   ├── (chart-slug) AUDIO.mp3
@@ -181,7 +192,7 @@ the following structure:</p>
 </code></pre>
 <p>A sample music library with this structure is
 <a href="https://1drv.ms/f/s!AlNWUe2YKW0ehYUQOrpQwFzMWRFiQQ">available for download here</a></p>
-<p>There will be a command to import charts into the library in a future release.</p>
+<p>There will be a command to import PDFs into the library in a future release.</p>
 <p>Note that <strong>magicbook</strong> currently requires a single-page letter size PDF file to
 properly impose the charts, stored as <code>./config/templates/trim-guides.pdf</code>. Use
 a PDF with trim markings
@@ -233,7 +244,7 @@ order.</li>
 </ul>
 <h3 id="planned-features">Planned Features</h3>
 <ul>
-<li>Importing charts into the library</li>
+<li>Importing chart files into the library</li>
 <li>Update the chart &quot;info.json&quot; file</li>
 <li>Modifying created books with a record of previous versions and the date
 modified, so PDFs with only updated parts as opposed to the whole book can be

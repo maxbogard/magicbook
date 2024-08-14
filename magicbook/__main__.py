@@ -4,28 +4,33 @@ import sys
 
 import os
 import json
+
 from simple_term_menu import TerminalMenu
 from rich import print
+from rich_argparse import RichHelpFormatter
 
-from setup_tools import setup_magicbook_library
-from library_tools import audit_library
-from book_tools import assemble_books
+from .setup_tools import setup_magicbook_library
+from .library_tools import audit_library, add_new_chart
+from .book_tools import assemble_books
 # from book_tools import Instrument
-from imposition_tools import merge_marchpacks
-from simple_io_tools import (
+from .imposition_tools import merge_marchpacks
+from .simple_io_tools import (
     assemble_book_questions,
     impose_choose_book,
     impose_choose_ensemble,
     choose_format_questions,
-    display_chart_list
+    display_chart_list,
+    display_book_list,
+    add_chart_results
 )
 
-from constants import (
+from .constants import (
     DEFAULT_CONFIG,
     SPLITSORT,
     MARCHPACK_FORMATS,
     BINDER_FORMATS
 )
+
 
 # various unorganized config files
 
@@ -61,25 +66,13 @@ def load_instruments(instruments):
     return instrument_defaults
 
 
-# and now the code begins...
-def list_assembled_books(dir):
-    """
-    ***DEPRECATE THIS ???
-    List all the books in a directory
-    """
-    books = []
-    for file in os.listdir(dir):
-        if file.endswith(".pdf"):
-            books.append(file)
-    return books
-
-
 def going_home():
     print('\n...returning to main menu\n')
 
 
 def interactive_mode():
     """
+    CURRENTLY NOT WORKING
     A fully interactive mode to run magicbook, in the style of an 80s text
     adventure game, that doesn't require the user to pass any arguments.
     """
@@ -208,6 +201,7 @@ def interactive_mode():
 
 def load_settings(mbp, config):
     """
+    ~NOT DEPRECATED
     Loads a config json file from the selected magicbook library
     """
     if os.path.exists(
@@ -227,83 +221,128 @@ def main():
     The CLI-style UI for magicbook, taking arguments.
     The goal is to use this to run a GUI with gooey
     """
+    epilog_text = "magicbook v0.0.2, licensed under the AGPL-3.0"
 
     parser = argparse.ArgumentParser(
         prog="magicbook",
         description="Sheet music management for large ensembles",
-        epilog="v0.0.2, licensed under the AGPL-3.0"
+        epilog=epilog_text,
+        formatter_class=RichHelpFormatter
     )
 
     parser.add_argument(
-        "path"
-        )
-
-    primary = parser.add_mutually_exclusive_group()
-    primary.add_argument(
-        "-int",
-        "--interactive",
-        action="store_true",
-        help="Runs magicbook with the old interactive text-adventure style UI"
-        )
-    primary.add_argument(
-        "-n",
-        "--new-library",
-        action="store_true",
-        help="Creates a new magicbook library in the specified path"
-        )
-    primary.add_argument(
-        "-a",
-        "--audit-library",
-        action="store_true",
-        help="Audits each chart dir in the library for a valid info.json file"
-        )
-    primary.add_argument(
-        "-b",
-        "--build-books",
-        action="store_true",
-        help="Builds a set of books from the specified library"
-        )
-    primary.add_argument(
         "-p",
-        "--impose-books",
-        action="store_true",
-        help="Imposes a set of books for printing into the specified format"
-    )
-    primary.add_argument(
-        "-l",
-        "--list-charts",
-        action="store_true",
-        help="Lists all charts in the library, with chart details"
+        "--path",
+        type=str,
+        help="Specify the path to a magicbook library",
+        default="."
     )
 
-    parser.add_argument(
-        "-ens",
-        "--ensemble",
-        type=str,
-        help="Specify an ensemble to perform an action with"
+    sub_parsers = parser.add_subparsers(dest='cmd')
+
+    sub_parsers.add_parser(
+        "new",
+        help="Creates a new magicbook library",
+        formatter_class=RichHelpFormatter
     )
-    parser.add_argument(
-        "-bk",
+
+    charts_parser = sub_parsers.add_parser(
+        "charts",
+        help="Commands for managing charts",
+        epilog=epilog_text,
+        formatter_class=RichHelpFormatter
+    )
+    charts_commands = charts_parser.add_subparsers(
+        dest='charts_cmd',
+        title='Chart Management',
+        description=(
+            'Commands for adding, auditing, and listing charts in the library'
+        ),
+    )
+    charts_commands.add_parser(
+        "audit",
+        help="Audits the library for valid chart info.json files"
+    )
+    charts_commands.add_parser(
+        "list",
+        help="Lists all charts in the library"
+    )
+    add_chart = charts_commands.add_parser(
+        "add",
+        help="Adds a new chart to the library",
+        formatter_class=RichHelpFormatter
+    )
+    add_chart.add_argument(
+        "slug",
+        type=str,
+        help="A unique identifier for the chart",
+        action="store"
+    )
+    add_chart.add_argument(
+        "is_single",
+        type=bool,
+        help="A unique identifier for the chart",
+        action="store"
+    )
+    add_chart.add_argument(
+        "--song",
+        type=str,
+        action="append",
+        nargs=3,
+        metavar=("TITLE", "COMPOSER", "ARRANGER")
+    )
+
+    books_parser = sub_parsers.add_parser(
+        "books",
+        help="Commands for building and imposing books",
+        formatter_class=RichHelpFormatter
+    )
+    books_commands = books_parser.add_subparsers(
+        dest='books_cmd',
+        title='Book Preparation and Management',
+        description=(
+            'Commands for creating new books, viewing existing books, and '
+            'imposing books for printing.'
+        )
+        )
+    books_commands.add_parser(
+        "list",
+        help="Lists all books in the library"
+    )
+    books_commands.add_parser(
+        "build",
+        help="Builds a new book"
+    )
+    impose_book = books_commands.add_parser(
+        "impose",
+        help="Imposes a book for printing in a specified format"
+    )
+    impose_book.add_argument(
+        "-b",
         "--book",
         type=str,
-        help="Specify a book to perform an action with"
+        action="store",
+        nargs=2,
+        metavar=("ENSEMBLE", "BOOK"),
+        help="Specify the book to impose"
     )
-    parser.add_argument(
-        "-pfmt",
+    impose_book.add_argument(
+        "-p",
         "--print-format",
         type=str,
-        help="Specify a format to impose books into"
+        action="store",
+        help="Specify the format to impose the book into"
     )
 
     args = parser.parse_args(args=None if sys.argv[1:] else ["-h"])
 
-    magicbook_path = Path(args.path)
+    if Path(args.path) is not None:
+        magicbook_path = Path(args.path)
+        print("path changed")
+    else:
+        magicbook_path = '.'
 
-    if args.interactive is True:
-        interactive_mode()
-        exit()
-
-    if args.new_library is True:
+    if args.cmd == "new":
         setup_magicbook_library(magicbook_path)
         exit()
 
@@ -339,8 +378,9 @@ def main():
             'The library passed the audit '
             f'with all {t} charts valid!\n'
             )
-    if args.audit_library is True:
-        exit()
+    if args.cmd == "charts":
+        if args.charts_cmd == "audit":
+            exit()
 
     default_instruments = load_instruments(
         os.path.join(
@@ -370,73 +410,110 @@ def main():
         settings['directories']['output']
         )
 
-    if args.list_charts is True:
-        display_chart_list(lib)
-        exit
+    if args.cmd == "charts":
+        if args.charts_cmd == "list":
+            display_chart_list(lib)
+            exit()
 
-    if args.build_books is True:
-        selected_charts, book_order_data = (
-            assemble_book_questions(
-                ensemble_info,
-                lib
-                )
-            )
-        issue_dir = assemble_books(
-            selected_charts,
-            library_path,
-            output_dir,
-            ensemble_instruments,
-            ensemble_info['slug'],
-            ensemble_info['name'],
-            book_order_data,
-            SPLITSORT
-                )
-
-        print(f'Books assembled to {magicbook_path}/{issue_dir}')
+        if args.charts_cmd == "add":
+            if args.song is None:
+                result = False
+                report = {
+                    'reason': 'no song data provided'
+                }
+            else:
+                songs = []
+                for song in args.song:
+                    if len(song) != 3:
+                        result = False
+                        report = {
+                            'reason': (
+                                'song data incomplete, must have'
+                                'title, artist, and arranger'
+                            )
+                        }
+                        break
+                    else:
+                        songs.append(
+                            {
+                                'title': song[0],
+                                'artist': song[1],
+                                'arranger': song[2]
+                            }
+                        )
+                result, report = add_new_chart(
+                    library_path,
+                    args.slug,
+                    args.is_single,
+                    songs
+                    )
+        add_chart_results(result, report)
         exit()
 
-    if args.impose_books is True:
-        if args.ensemble is None:
-            ensemble_slug = impose_choose_ensemble(output_dir)
-        else:
-            ensemble_slug = args.ensemble
+    if args.cmd == "books":
+        if args.books_cmd == "list":
+            display_book_list(output_dir)
+            exit()
 
-        if args.book is None:
-            book_dir = impose_choose_book(
+        if args.books_cmd == "build":
+            selected_charts, book_order_data = (
+                assemble_book_questions(
+                    ensemble_info,
+                    lib
+                    )
+                )
+            issue_dir = assemble_books(
+                selected_charts,
+                library_path,
                 output_dir,
-                ensemble_slug
+                ensemble_instruments,
+                ensemble_info['slug'],
+                ensemble_info['name'],
+                book_order_data,
+                SPLITSORT
+                    )
+
+            print(f'Books assembled to {magicbook_path}/{issue_dir}')
+            exit()
+
+        if args.books_cmd == "impose":
+            if args.book is None:
+                ensemble_slug = impose_choose_ensemble(output_dir)
+                book_dir = impose_choose_book(
+                    output_dir,
+                    ensemble_slug
+                    )
+            else:
+                book_dir = args.book
+
+            if args.print_format is None:
+                book_format = choose_format_questions()
+            else:
+                book_format = args.print_format
+
+            path_to_book = os.path.join(
+                output_dir,
+                ensemble_slug,
+                book_dir
                 )
-        else:
-            book_dir = args.book
 
-        if args.print_format is None:
-            book_format = choose_format_questions()
-        else:
-            book_format = args.print_format
+            book_info_f = os.path.join(
+                output_dir,
+                ensemble_slug,
+                book_dir,
+                'book-info.json'
+                )
 
-        path_to_book = os.path.join(
-            output_dir,
-            ensemble_slug,
-            book_dir
+            with open(book_info_f) as book_info:
+                book_info = json.load(book_info)
+
+            merge_marchpacks(
+                book_info['charts'],
+                path_to_book,
+                book_format
             )
 
-        book_info_f = os.path.join(
-            output_dir,
-            ensemble_slug,
-            book_dir,
-            'book-info.json'
-            )
-
-        with open(book_info_f) as book_info:
-            book_info = json.load(book_info)
-
-        merge_marchpacks(
-            book_info['charts'],
-            path_to_book,
-            book_format
-        )
-
-        exit()
+            exit()
 
 
 if __name__ == "__main__":
