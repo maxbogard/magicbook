@@ -48,17 +48,32 @@ def list_charts(lib: list[Chart]) -> list[str]:
     """
     Returns a list of chart names in the library
     """
+    chart_list = []
     for chart in lib:
-        print(chart.title)
         if chart.is_single is True:
-            print(f"     by {chart.songs[0].artist}")
-            print(f"     arranged by {chart.songs[0].arranger}")
+            list_entry = [
+                str(chart.title),
+                str(chart.songs[0].artist),
+                str(chart.songs[0].arranger)
+            ]
+            chart_list.append(list_entry)
+
         else:
+            list_entry = [
+                str(chart.title),
+                "--",
+                "--"
+            ]
+            chart_list.append(list_entry)
+
             for song in chart.songs:
-                print(f"     {song.title}")
-                print(f"         by {song.artist}")
-                print(f"         arranged by {song.arranger}")
-        print("\n")
+                list_entry = [
+                    f" - {song.title}",
+                    f" {str(song.artist)}",
+                    f" {str(song.arranger)}"
+                ]
+                chart_list.append(list_entry)
+    return chart_list
 
 
 def strip_part_filename(

@@ -1,8 +1,10 @@
 import os
 
+from rich.console import Console
+from rich.table import Table
 from simple_term_menu import TerminalMenu
 
-from library_tools import Chart
+from library_tools import Chart, list_charts
 
 from constants import (
     MARCHPACK_FORMATS,
@@ -15,6 +17,22 @@ def chart_names_list(charts_list: list[Chart]):
     """
     chart_names = [chart.title for chart in charts_list]
     return chart_names
+
+
+def display_chart_list(lib):
+    chart_display = Table(title="Charts in Magicbook Library")
+
+    chart_display.add_column("Title", justify="left", style="cyan")
+    chart_display.add_column("Artist", justify="left", style="magenta")
+    chart_display.add_column("Arranger", justify="left", style="green")
+
+    charts_list = list_charts(lib)
+
+    for entry in charts_list:
+        chart_display.add_row(entry[0], entry[1], entry[2])
+
+    console = Console()
+    console.print(chart_display)
 
 
 def lib_single_query(loc, pageid="", prefix=None):

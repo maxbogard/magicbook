@@ -5,11 +5,10 @@ import sys
 import os
 import json
 from simple_term_menu import TerminalMenu
-from prompt_toolkit import print_formatted_text as print
-from prompt_toolkit import HTML
+from rich import print
 
 from setup_tools import setup_magicbook_library
-from library_tools import audit_library, list_charts
+from library_tools import audit_library
 from book_tools import assemble_books
 # from book_tools import Instrument
 from imposition_tools import merge_marchpacks
@@ -17,7 +16,8 @@ from simple_io_tools import (
     assemble_book_questions,
     impose_choose_book,
     impose_choose_ensemble,
-    choose_format_questions
+    choose_format_questions,
+    display_chart_list
 )
 
 from constants import (
@@ -136,9 +136,7 @@ def interactive_mode():
                 )
     ensemble_dir = ensemble_info['slug']
 
-    print(
-        HTML("hey, you're running <b>magicbook</b>!")
-        )
+    print("hey, you're running magicbook!")
 
     while True:
         print('MAIN MENU')
@@ -373,7 +371,7 @@ def main():
         )
 
     if args.list_charts is True:
-        list_charts(lib)
+        display_chart_list(lib)
         exit
 
     if args.build_books is True:
