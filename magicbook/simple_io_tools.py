@@ -216,28 +216,31 @@ def assemble_book_questions(
     return sorted_charts, book_order_data
 
 
-def impose_books_questions(
+def impose_choose_ensemble(
         output_dir: str,
-        ensemble_slug: str = None
         ):
     output_ensembles = []
     for dir in os.listdir(output_dir):
         output_ensembles.append(dir)
 
-    if ensemble_slug is None:
-        ensemble_select_menu = TerminalMenu(
-            output_ensembles,
-            multi_select=False,
-            show_multi_select_hint=False,
-            title="Select an ensemble to impose books for"
-        )
-        ensemble_menu_index = ensemble_select_menu.show()
-        selected_ensemble = output_ensembles[ensemble_menu_index]
-    else:
-        selected_ensemble = ensemble_slug
+    ensemble_select_menu = TerminalMenu(
+        output_ensembles,
+        multi_select=False,
+        show_multi_select_hint=False,
+        title="Select an ensemble to impose books for"
+    )
+    ensemble_menu_index = ensemble_select_menu.show()
+    selected_ensemble = output_ensembles[ensemble_menu_index]
 
+    return selected_ensemble
+
+
+def impose_choose_book(
+        output_dir: str,
+        ensemble_slug: str
+):
     books_menu = []
-    for dir in os.listdir(os.path.join(output_dir, selected_ensemble)):
+    for dir in os.listdir(os.path.join(output_dir, ensemble_slug)):
         books_menu.append(dir)
 
     book_select_menu = TerminalMenu(
@@ -249,12 +252,7 @@ def impose_books_questions(
     book_menu_index = book_select_menu.show()
     selected_book = books_menu[book_menu_index]
 
-    path_to_book = os.path.join(
-        selected_ensemble,
-        selected_book
-    )
-
-    return path_to_book
+    return selected_book
 
 
 def choose_format_questions():

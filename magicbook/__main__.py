@@ -15,7 +15,8 @@ from book_tools import assemble_books
 from imposition_tools import merge_marchpacks
 from simple_io_tools import (
     assemble_book_questions,
-    impose_books_questions,
+    impose_choose_book,
+    impose_choose_ensemble,
     choose_format_questions
 )
 
@@ -235,7 +236,9 @@ def main():
         epilog="v0.0.2, licensed under the AGPL-3.0"
     )
 
-    parser.add_argument("path")
+    parser.add_argument(
+        "path"
+        )
 
     primary = parser.add_mutually_exclusive_group()
     primary.add_argument(
@@ -273,6 +276,25 @@ def main():
         "--list-charts",
         action="store_true",
         help="Lists all charts in the library, with chart details"
+    )
+
+    parser.add_argument(
+        "-ens",
+        "--ensemble",
+        type=str,
+        help="Specify an ensemble to perform an action with"
+    )
+    parser.add_argument(
+        "-bk",
+        "--book",
+        type=str,
+        help="Specify a book to perform an action with"
+    )
+    parser.add_argument(
+        "-pfmt",
+        "--print-format",
+        type=str,
+        help="Specify a format to impose books into"
     )
 
     args = parser.parse_args(args=None if sys.argv[1:] else ["-h"])
@@ -376,19 +398,33 @@ def main():
         exit()
 
     if args.impose_books is True:
-        book_dir = impose_books_questions(
-            output_dir
-            )
+        if args.ensemble is None:
+            ensemble_slug = impose_choose_ensemble(output_dir)
+        else:
+            ensemble_slug = args.ensemble
 
-        book_format = choose_format_questions()
+        if args.book is None:
+            book_dir = impose_choose_book(
+                output_dir,
+                ensemble_slug
+                )
+        else:
+            book_dir = args.book
+
+        if args.print_format is None:
+            book_format = choose_format_questions()
+        else:
+            book_format = args.print_format
 
         path_to_book = os.path.join(
             output_dir,
+            ensemble_slug,
             book_dir
             )
 
         book_info_f = os.path.join(
             output_dir,
+            ensemble_slug,
             book_dir,
             'book-info.json'
             )
