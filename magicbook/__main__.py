@@ -221,7 +221,7 @@ def main():
     The CLI-style UI for magicbook, taking arguments.
     The goal is to use this to run a GUI with gooey
     """
-    epilog_text = "magicbook v0.0.2, licensed under the AGPL-3.0"
+    epilog_text = "magicbook v0.0.3, licensed under the AGPL-3.0"
 
     parser = argparse.ArgumentParser(
         prog="magicbook",

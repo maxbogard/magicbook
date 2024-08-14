@@ -4,20 +4,20 @@ version = "0.0.3"
 description = "Sheet music management for large ensembles"
 authors = ["Max"]
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "AGPL-3.0"
 keywords = ['sheet music']
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha"
-    "Environment :: Console"
-    "Intended Audience :: Education"
-    "Natural Language :: English"
-    "Programming Language :: Python"
-    "Topic :: Artistic Software"
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Education",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Topic :: Artistic Software",
     "Topic :: Printing"
 ]
 
 [project.urls]
-"https://github.com/maxbogard/magicbook.git"
+repository = "https://github.com/maxbogard/magicbook.git"
 
 [tool.poetry.dependencies]
 python = "^3.12"
