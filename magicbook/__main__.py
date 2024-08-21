@@ -447,8 +447,8 @@ def main():
                     args.is_single,
                     songs
                     )
-        add_chart_results(result, report)
-        exit()
+            add_chart_results(result, report)
+            exit()
 
     if args.cmd == "books":
         if args.books_cmd == "list":

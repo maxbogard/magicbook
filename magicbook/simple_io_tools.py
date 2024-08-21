@@ -316,7 +316,7 @@ def add_chart_results(
 ):
     if result is True:
         print("Chart was successfully added to the library \n")
-        print(f"Directory: {report['chart-slug']}")
+        print(f"Directory: {report['slug']}")
     else:
         print("Chart was not added \n")
         print(f'Reason: {report['reason']}')

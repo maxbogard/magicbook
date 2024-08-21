@@ -4,6 +4,12 @@ A set of utilities for managing your large ensemble sheet music
 
 ## Getting Started
 
+### Installation
+
+`pipx install magicbook`
+
+### Usage
+
 Create a new **magicbook** library by running `magicbook (directory) -n`, this
 creates a new library in the specified directory. The library will have the
 following structure:
